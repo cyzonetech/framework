@@ -21,7 +21,7 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "cyzonetech/think-installer": "dev-master"
+        "cyzonetech/think-installer": "~1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "4.8.*",

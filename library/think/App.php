@@ -303,6 +303,8 @@ class App
             case 'method':
                 // 执行回调方法
                 $vars = array_merge(Request::instance()->param(), $dispatch['var']);
+                // TODO 解析里命名空间里的模块名、控制器名、方法名
+                self::setMethodRequestData($dispatch['method']);
                 $data = self::invokeMethod($dispatch['method'], $vars);
                 break;
             case 'function':
@@ -316,6 +318,53 @@ class App
                 throw new \InvalidArgumentException('dispatch type not support');
         }
         return $data;
+    }
+
+    /**
+     * 设置method请求方式module、controller、action的值
+     *
+     * @param array $method
+     */
+    protected static function setMethodRequestData($method)
+    {
+        if (is_array($method)) {
+            $namespace = Config::get('app_namespace');
+            $layer = Config::get('url_controller_layer');
+            $pattern = "/\\\APP\\\([^\\\]+)\\\CONTROLLER\\\(.*?)$/";
+            $pattern = str_replace(['APP', 'CONTROLLER'], [$namespace, $layer], $pattern);
+            if (preg_match($pattern, $method[0], $matches)) {
+                $module = $matches[1];
+                $controller = ucfirst(strtolower(str_replace('\\', '.', $matches[2])));
+                $action = $method[1];
+                $request = Request::instance();
+                $request->module($module);
+                $request->controller($controller);
+                $request->action($action);
+                // 初始化模块
+                self::init($module);
+                // 当前模块路径
+                App::$modulePath = APP_PATH . ($module ? $module . DS : '');
+                // 监听module_init
+                Hook::listen('module_init', $request);
+                // 监听action_begin
+                Hook::listen('action_begin', $method);
+
+                // 注册Url生成过滤器
+                Url::registerBeforeFilter(function (&$url) use ($request, $pattern) {
+                    $host = $request->host();
+
+                    $routes = Route::rules('domain');
+                    if (isset($routes[$host]) && isset($routes[$host]['[bind]'])) {
+                        if (preg_match($pattern, $routes[$host]['[bind]'][0], $matches)) {
+                            $url = str_replace([
+                                "{$matches[1]}/{$matches[2]}/",
+                                "{$matches[1]}/{$matches[2]}.",
+                            ], '', $url);
+                        }
+                    }
+                });
+            }
+        }
     }
 
     /**

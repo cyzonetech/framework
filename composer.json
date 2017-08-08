@@ -1,6 +1,6 @@
 {
-    "name": "topthink/framework",
-    "description": "the new thinkphp framework",
+    "name": "cyzonetech/framework",
+    "description": "fix bug from topthink/framework",
     "type": "think-framework",
     "keywords": [
         "framework",
@@ -13,6 +13,10 @@
         {
             "name": "liu21st",
             "email": "liu21st@gmail.com"
+        },
+        {
+            "name": "yuan1994",
+            "email": "tianpian0805@gmail.com"
         }
     ],
     "require": {

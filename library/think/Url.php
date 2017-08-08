@@ -16,6 +16,7 @@ class Url
     // 生成URL地址的root
     protected static $root;
     protected static $bindCheck;
+    protected static $beforeFilterCall;
 
     /**
      * URL生成 支持路由反射
@@ -157,6 +158,7 @@ class Url
         $domain = self::parseDomain($url, $domain);
         // URL组装
         $url = $domain . rtrim(self::$root ?: Request::instance()->root(), '/') . '/' . ltrim($url, '/');
+        self::beforeFilter($url);
 
         self::$bindCheck = false;
         return $url;
@@ -324,5 +326,17 @@ class Url
     {
         self::$root = $root;
         Request::instance()->root($root);
+    }
+
+    // Url生成过滤器
+    protected static function beforeFilter(string &$url)
+    {
+        is_callable(self::$beforeFilterCall) && call_user_func_array(self::$beforeFilterCall, [&$url]);
+    }
+
+    // 注册Url生成过滤器
+    public static function registerBeforeFilter($call)
+    {
+        self::$beforeFilterCall = $call;
     }
 }

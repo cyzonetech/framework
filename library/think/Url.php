@@ -329,7 +329,7 @@ class Url
     }
 
     // Url生成过滤器
-    protected static function beforeFilter(string &$url)
+    protected static function beforeFilter(&$url)
     {
         is_callable(self::$beforeFilterCall) && call_user_func_array(self::$beforeFilterCall, [&$url]);
     }

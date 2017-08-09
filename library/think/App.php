@@ -356,9 +356,10 @@ class App
                     $routes = Route::rules('domain');
                     if (isset($routes[$host]) && isset($routes[$host]['[bind]'])) {
                         if (preg_match($pattern, $routes[$host]['[bind]'][0], $matches)) {
+                            $c = strtolower(str_replace('\\', '.', $matches[2]));
                             $url = str_replace([
-                                "{$matches[1]}/{$matches[2]}/",
-                                "{$matches[1]}/{$matches[2]}.",
+                                "{$matches[1]}/{$c}/",
+                                "{$matches[1]}/{$c}.",
                             ], '', $url);
                         }
                     }

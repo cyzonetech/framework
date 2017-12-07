@@ -80,20 +80,25 @@ class Redis extends Driver
     public function get($name, $default = false)
     {
         $value = $this->handler->get($this->getCacheKey($name));
-        if (is_null($value)) {
+        if (is_null($value) || false === $value) {
             return $default;
         }
-        $jsonData = json_decode($value, true);
-        // 检测是否为JSON数据 true 返回JSON解析数组, false返回源数据 byron sampson<xiaobo.sun@qq.com>
-        return (null === $jsonData) ? $value : $jsonData;
+
+        try {
+            $result = unserialize($value);
+        } catch (\Exception $e) {
+            $result = $default;
+        }
+
+        return $result;
     }
 
     /**
      * 写入缓存
      * @access public
-     * @param string    $name 缓存变量名
-     * @param mixed     $value  存储数据
-     * @param integer   $expire  有效时间（秒）
+     * @param string            $name 缓存变量名
+     * @param mixed             $value  存储数据
+     * @param integer|\DateTime $expire  有效时间（秒）
      * @return boolean
      */
     public function set($name, $value, $expire = null)
@@ -101,12 +106,14 @@ class Redis extends Driver
         if (is_null($expire)) {
             $expire = $this->options['expire'];
         }
+        if ($expire instanceof \DateTime) {
+            $expire = $expire->getTimestamp() - time();
+        }
         if ($this->tag && !$this->has($name)) {
             $first = true;
         }
-        $key = $this->getCacheKey($name);
-        //对数组/对象数据进行缓存处理，保证数据完整性  byron sampson<xiaobo.sun@qq.com>
-        $value = (is_object($value) || is_array($value)) ? json_encode($value) : $value;
+        $key   = $this->getCacheKey($name);
+        $value = serialize($value);
         if (is_int($expire) && $expire) {
             $result = $this->handler->setex($key, $expire, $value);
         } else {
@@ -125,8 +132,12 @@ class Redis extends Driver
      */
     public function inc($name, $step = 1)
     {
-        $key = $this->getCacheKey($name);
-        return $this->handler->incrby($key, $step);
+        if ($this->has($name)) {
+            $value = $this->get($name) + $step;
+        } else {
+            $value = $step;
+        }
+        return $this->set($name, $value, 0) ? $value : false;
     }
 
     /**
@@ -138,8 +149,12 @@ class Redis extends Driver
      */
     public function dec($name, $step = 1)
     {
-        $key = $this->getCacheKey($name);
-        return $this->handler->decrby($key, $step);
+        if ($this->has($name)) {
+            $value = $this->get($name) - $step;
+        } else {
+            $value = -$step;
+        }
+        return $this->set($name, $value, 0) ? $value : false;
     }
 
     /**

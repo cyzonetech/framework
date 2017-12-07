@@ -118,8 +118,8 @@ abstract class Builder
                     $result[$item] = $val;
                 } else {
                     $key = str_replace('.', '_', $key);
-                    $this->query->bind('__data__' . $key, $val, isset($bind[$key]) ? $bind[$key] : PDO::PARAM_STR);
-                    $result[$item] = ':__data__' . $key;
+                    $this->query->bind('data__' . $key, $val, isset($bind[$key]) ? $bind[$key] : PDO::PARAM_STR);
+                    $result[$item] = ':data__' . $key;
                 }
             }
         }
@@ -302,7 +302,7 @@ abstract class Builder
 
         // 查询规则和条件
         if (!is_array($val)) {
-            $val = ['=', $val];
+            $val = is_null($val) ? ['null', ''] : ['=', $val];
         }
         list($exp, $value) = $val;
 
@@ -579,7 +579,7 @@ abstract class Builder
      */
     protected function parseGroup($group)
     {
-        return !empty($group) ? ' GROUP BY ' . $group : '';
+        return !empty($group) ? ' GROUP BY ' . $this->parseKey($group) : '';
     }
 
     /**
@@ -660,12 +660,16 @@ abstract class Builder
     /**
      * 设置锁机制
      * @access protected
-     * @param bool $lock
+     * @param bool|string $lock
      * @return string
      */
     protected function parseLock($lock = false)
     {
-        return $lock ? ' FOR UPDATE ' : '';
+        if (is_bool($lock)) {
+            return $lock ? ' FOR UPDATE ' : '';
+        } elseif (is_string($lock)) {
+            return ' ' . trim($lock) . ' ';
+        }
     }
 
     /**

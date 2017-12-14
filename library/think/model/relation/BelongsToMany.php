@@ -52,6 +52,10 @@ class BelongsToMany extends Relation
         }
         $this->query = (new $model)->db();
         $this->pivot = $this->newPivot();
+
+        if ('think\model\Pivot' == get_class($this->pivot)) {
+            $this->pivot->name($this->middle);
+        }
     }
 
     /**

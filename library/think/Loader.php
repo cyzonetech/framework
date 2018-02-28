@@ -298,6 +298,15 @@ class Loader
 
                 self::$prefixesPsr0 = property_exists($composerClass, 'prefixesPsr0') ? $composerClass::$prefixesPsr0 : [];
                 self::$map          = property_exists($composerClass, 'classMap') ? $composerClass::$classMap : [];
+                
+//                if (!empty($composerClass::$files)) {
+//                    foreach ($composerClass::$files as $fileIdentifier => $file) {
+//                        if (empty(self::$autoloadFiles[$fileIdentifier])) {
+//                            __require_file($file);
+//                            self::$autoloadFiles[$fileIdentifier] = true;
+//                        }
+//                    }
+//                }                
             } else {
                 self::registerComposerLoader();
             }

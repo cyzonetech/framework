@@ -324,6 +324,8 @@ class Loader
             self::addClassMap(__include_file(RUNTIME_PATH . 'classmap' . EXT));
         }
 
+        self::loadComposerAutoloadFiles();
+
         // 自动加载 extend 目录
         self::$fallbackDirsPsr4[] = rtrim(EXTEND_PATH, DS);
     }
@@ -354,9 +356,12 @@ class Loader
             if ($classMap) {
                 self::addClassMap($classMap);
             }
-
         }
+    }
 
+    // 加载composer autofile文件
+    public static function loadComposerAutoloadFiles()
+    {
         if (is_file(VENDOR_PATH . 'composer/autoload_files.php')) {
             $includeFiles = require VENDOR_PATH . 'composer/autoload_files.php';
             foreach ($includeFiles as $fileIdentifier => $file) {

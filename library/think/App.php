@@ -197,6 +197,20 @@ class App implements \ArrayAccess
         // 初始化应用
         $this->init();
 
+        // 加载应用状态配置
+        $app_status = $this->env->get('app_status', $this->config('app.app_status'));
+        if ($app_status) {
+            $filename = $this->appPath . $app_status . '.php';
+            if (is_file($filename)) {
+                $configs = include $filename;
+                if (is_array($configs) && !empty($configs)) {
+                    foreach ($configs as $name => $value) {
+                        $this->config->set($value, $name);
+                    }
+                }
+            }
+        }
+        
         // 开启类名后缀
         $this->suffix = $this->config('app.class_suffix');
 

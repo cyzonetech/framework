@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
@@ -15,26 +15,42 @@ use think\Collection;
 use think\Exception;
 use think\Loader;
 use think\Model;
+use think\model\Collection as ModelCollection;
 
 /**
  * 模型数据转换处理
  */
 trait Conversion
 {
-    // 显示属性
+    /**
+     * 数据输出显示的属性
+     * @var array
+     */
     protected $visible = [];
-    // 隐藏属性
+
+    /**
+     * 数据输出隐藏的属性
+     * @var array
+     */
     protected $hidden = [];
-    // 附加属性
+
+    /**
+     * 数据输出需要追加的属性
+     * @var array
+     */
     protected $append = [];
-    // 查询数据集对象
+
+    /**
+     * 数据集对象名
+     * @var string
+     */
     protected $resultSetType;
 
     /**
      * 设置需要附加的输出属性
      * @access public
-     * @param array $append   属性列表
-     * @param bool  $override 是否覆盖
+     * @param  array $append   属性列表
+     * @param  bool  $override 是否覆盖
      * @return $this
      */
     public function append($append = [], $override = false)
@@ -47,8 +63,8 @@ trait Conversion
     /**
      * 设置附加关联对象的属性
      * @access public
-     * @param string       $attr    关联属性
-     * @param string|array $append  追加属性名
+     * @param  string       $attr    关联属性
+     * @param  string|array $append  追加属性名
      * @return $this
      * @throws Exception
      */
@@ -82,8 +98,8 @@ trait Conversion
     /**
      * 设置需要隐藏的输出属性
      * @access public
-     * @param array $hidden   属性列表
-     * @param bool  $override 是否覆盖
+     * @param  array $hidden   属性列表
+     * @param  bool  $override 是否覆盖
      * @return $this
      */
     public function hidden($hidden = [], $override = false)
@@ -96,8 +112,8 @@ trait Conversion
     /**
      * 设置需要输出的属性
      * @access public
-     * @param array $visible
-     * @param bool  $override 是否覆盖
+     * @param  array $visible
+     * @param  bool  $override 是否覆盖
      * @return $this
      */
     public function visible($visible = [], $override = false)
@@ -159,7 +175,10 @@ trait Conversion
                     $relation   = $this->getAttr($key);
                     $item[$key] = $relation->append([$attr])->toArray();
                 } else {
-                    $item[$name] = $this->getAttr($name);
+                    $value = $this->getAttr($name, $item);
+                    if (false !== $value) {
+                        $item[$name] = $value;
+                    }
                 }
             }
         }
@@ -170,7 +189,7 @@ trait Conversion
     /**
      * 转换当前模型对象为JSON字符串
      * @access public
-     * @param integer $options json参数
+     * @param  integer $options json参数
      * @return string
      */
     public function toJson($options = JSON_UNESCAPED_UNICODE)
@@ -203,16 +222,18 @@ trait Conversion
     /**
      * 转换数据集为数据集对象
      * @access public
-     * @param array|Collection $collection 数据集
+     * @param  array|Collection $collection 数据集
+     * @param  string           $resultSetType 数据集类
      * @return Collection
      */
-    public function toCollection($collection)
+    public function toCollection($collection, $resultSetType = null)
     {
-        if ($this->resultSetType && false !== strpos($this->resultSetType, '\\')) {
-            $class      = $this->resultSetType;
-            $collection = new $class($collection);
+        $resultSetType = $resultSetType ?: $this->resultSetType;
+
+        if ($resultSetType && false !== strpos($resultSetType, '\\')) {
+            $collection = new $resultSetType($collection);
         } else {
-            $collection = new \think\model\Collection($collection);
+            $collection = new ModelCollection($collection);
         }
 
         return $collection;
@@ -221,9 +242,9 @@ trait Conversion
     /**
      * 解析隐藏及显示属性
      * @access protected
-     * @param array $attrs  属性
-     * @param array $result 结果集
-     * @param bool  $visible
+     * @param  array $attrs  属性
+     * @param  array $result 结果集
+     * @param  bool  $visible
      * @return array
      */
     protected function parseAttr($attrs, &$result, $visible = true)

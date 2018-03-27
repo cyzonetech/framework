@@ -30,7 +30,7 @@ return [
         // 默认JSONP处理方法
         'var_jsonp_handler'      => 'callback',
         // 默认时区
-        'default_timezone'       => 'PRC',
+        'default_timezone'       => 'Asia/Shanghai',
         // 是否开启多语言
         'lang_switch_on'         => false,
         // 默认全局过滤方法 用逗号分隔多个
@@ -56,6 +56,8 @@ return [
         'default_action'         => 'index',
         // 默认验证器
         'default_validate'       => '',
+        // 默认的空模块名
+        'empty_module'           => '',
         // 默认的空控制器名
         'empty_controller'       => 'Error',
         // 操作方法前缀
@@ -87,6 +89,12 @@ return [
         'url_lazy_route'         => false,
         // 是否强制使用路由
         'url_route_must'         => false,
+        // 合并路由规则
+        'route_rule_merge'       => false,
+        // 路由是否完全匹配
+        'route_complete_match'   => false,
+        // 使用注解路由
+        'route_annotation'       => false,
         // 域名根，如thinkphp.cn
         'url_domain_root'        => '',
         // 是否自动转换URL中的控制器和操作名
@@ -106,8 +114,6 @@ return [
         // 全局请求缓存排除规则
         'request_cache_except'   => [],
 
-        // 视图输出字符串内容替换
-        'view_replace_str'       => [],
         // 默认跳转页面对应的模板文件
         'dispatch_success_tmpl'  => __DIR__ . '/tpl/dispatch_jump.tpl',
         'dispatch_error_tmpl'    => __DIR__ . '/tpl/dispatch_jump.tpl',
@@ -285,4 +291,10 @@ return [
         'list_rows' => 15,
     ],
 
+    //控制台配置
+    'console'  => [
+        'name'    => 'Think Console',
+        'version' => '0.1',
+        'user'    => null,
+    ],
 ];

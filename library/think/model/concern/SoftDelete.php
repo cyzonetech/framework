@@ -19,7 +19,7 @@ trait SoftDelete
     {
         $field = $this->getDeleteTimeField();
 
-        if (!empty($this->getOrigin($field))) {
+        if ($field && !empty($this->getOrigin($field))) {
             return true;
         }
 
@@ -48,15 +48,18 @@ trait SoftDelete
         $model = new static();
         $field = $model->getDeleteTimeField(true);
 
-        return $model
-            ->db(false)
-            ->useSoftDelete($field, ['not null', '']);
+        if ($field) {
+            return $model
+                ->db(false)
+                ->useSoftDelete($field, ['not null', '']);
+        }
+        return $model->db(false);
     }
 
     /**
      * 删除当前的记录
      * @access public
-     * @param bool  $force 是否强制删除
+     * @param  bool  $force 是否强制删除
      * @return integer
      */
     public function delete($force = false)
@@ -67,15 +70,29 @@ trait SoftDelete
 
         $name = $this->getDeleteTimeField();
 
-        if (!$force) {
+        if ($name && !$force) {
             // 软删除
             $this->data($name, $this->autoWriteTimestamp($name));
+
             $result = $this->isUpdate()->save();
         } else {
-            $result = $this->db(false)->delete($this->getData());
+            // 读取更新条件
+            $where = $this->getWhere();
+
+            // 删除当前模型数据
+            $result = $this->db(false)->where($where)->delete();
+        }
+
+        // 关联删除
+        if (!empty($this->relationWrite)) {
+            $this->autoRelationDelete();
         }
 
         $this->trigger('after_delete', $this);
+
+        // 清空数据
+        $this->data   = [];
+        $this->origin = [];
 
         return $result;
     }
@@ -83,8 +100,8 @@ trait SoftDelete
     /**
      * 删除记录
      * @access public
-     * @param mixed $data 主键列表 支持闭包查询条件
-     * @param bool  $force 是否强制删除
+     * @param  mixed $data 主键列表 支持闭包查询条件
+     * @param  bool  $force 是否强制删除
      * @return integer 成功删除的记录数
      */
     public static function destroy($data, $force = false)
@@ -118,7 +135,7 @@ trait SoftDelete
     /**
      * 恢复被软删除的记录
      * @access public
-     * @param array $where 更新条件
+     * @param  array $where 更新条件
      * @return integer
      */
     public function restore($where = [])
@@ -127,25 +144,33 @@ trait SoftDelete
 
         if (empty($where)) {
             $pk         = $this->getPk();
-            $where[$pk] = $this->getData($pk);
+            $where[$pk] = [$pk, '=', $this->getData($pk)];
         }
 
-        // 恢复删除
-        return $this->db(false)
-            ->where($where)
-            ->useSoftDelete($name, ['not null', ''])
-            ->update([$name => null]);
+        if ($name) {
+            // 恢复删除
+            return $this->db(false)
+                ->where($where)
+                ->useSoftDelete($name, ['not null', ''])
+                ->update([$name => null]);
+        }
+
+        return 0;
     }
 
     /**
      * 获取软删除字段
-     * @access public
-     * @param bool  $read 是否查询操作 写操作的时候会自动去掉表别名
-     * @return string
+     * @access protected
+     * @param  bool  $read 是否查询操作 写操作的时候会自动去掉表别名
+     * @return string|false
      */
     protected function getDeleteTimeField($read = false)
     {
         $field = property_exists($this, 'deleteTime') && isset($this->deleteTime) ? $this->deleteTime : 'delete_time';
+
+        if (false === $field) {
+            return false;
+        }
 
         if (!strpos($field, '.')) {
             $field = '__TABLE__.' . $field;

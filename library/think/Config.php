@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
@@ -11,11 +11,18 @@
 
 namespace think;
 
-class Config
+class Config implements \ArrayAccess
 {
-    // 配置参数
+    /**
+     * 配置参数
+     * @var array
+     */
     private $config = [];
-    // 当前参数前缀（一级配置名）
+
+    /**
+     * 缓存前缀
+     * @var string
+     */
     private $prefix = 'app';
 
     /**
@@ -32,9 +39,9 @@ class Config
     /**
      * 解析配置文件或内容
      * @access public
-     * @param string    $config 配置文件路径或内容
-     * @param string    $type 配置解析类型
-     * @param string    $name 配置名（如设置即表示二级配置）
+     * @param  string    $config 配置文件路径或内容
+     * @param  string    $type 配置解析类型
+     * @param  string    $name 配置名（如设置即表示二级配置）
      * @return mixed
      */
     public function parse($config, $type = '', $name = '')
@@ -49,10 +56,10 @@ class Config
     }
 
     /**
-     * 加载配置文件（PHP格式）
+     * 加载配置文件（多种格式）
      * @access public
-     * @param string    $file 配置文件名
-     * @param string    $name 配置名（如设置即表示二级配置）
+     * @param  string    $file 配置文件名
+     * @param  string    $name 一级配置名
      * @return mixed
      */
     public function load($file, $name = '')
@@ -65,18 +72,42 @@ class Config
                 return $this->set(include $file, $name);
             } elseif ('yaml' == $type && function_exists('yaml_parse_file')) {
                 return $this->set(yaml_parse_file($file), $name);
-            } else {
-                return $this->parse($file, $type, $name);
             }
-        } else {
-            return $this->config;
+            return $this->parse($file, $type, $name);
+        }
+
+        return $this->config;
+    }
+
+    /**
+     * 自动加载配置文件（PHP格式）
+     * @access public
+     * @param  string    $name 配置名
+     * @return void
+     */
+    protected function autoLoad($name)
+    {
+        // 如果尚未载入 则动态加载配置文件
+        $module = Container::get('request')->module();
+        $module = $module ? $module . DIRECTORY_SEPARATOR : '';
+        $app    = Container::get('app');
+        $path   = $app->getAppPath() . $module;
+
+        if (is_dir($path . 'config')) {
+            $file = $path . 'config' . DIRECTORY_SEPARATOR . $name . $app->getConfigExt();
+        } elseif (is_dir($app->getConfigPath() . $module)) {
+            $file = $app->getConfigPath() . $module . $name . $app->getConfigExt();
+        }
+
+        if (isset($file) && is_file($file)) {
+            $this->load($file, $name);
         }
     }
 
     /**
      * 检测配置是否存在
      * @access public
-     * @param string    $name 配置参数名（支持多级配置 .号分割）
+     * @param  string    $name 配置参数名（支持多级配置 .号分割）
      * @return bool
      */
     public function has($name)
@@ -85,18 +116,23 @@ class Config
             $name = $this->prefix . '.' . $name;
         }
 
-        return $this->get($name) ? true : false;
+        return !is_null($this->get($name)) ? true : false;
     }
 
     /**
      * 获取一级配置
      * @access public
-     * @param string    $name 一级配置名
+     * @param  string    $name 一级配置名
      * @return array
      */
     public function pull($name)
     {
         $name = strtolower($name);
+
+        if (!isset($this->config[$name])) {
+            // 如果尚未载入 则动态加载配置文件
+            $this->autoLoad($name);
+        }
 
         return isset($this->config[$name]) ? $this->config[$name] : [];
     }
@@ -104,7 +140,7 @@ class Config
     /**
      * 获取配置参数 为空则获取所有配置
      * @access public
-     * @param string    $name 配置参数名（支持多级配置 .号分割）
+     * @param  string    $name 配置参数名（支持多级配置 .号分割）
      * @return mixed
      */
     public function get($name = null)
@@ -116,25 +152,17 @@ class Config
 
         if (!strpos($name, '.')) {
             $name = $this->prefix . '.' . $name;
+        } elseif ('.' == substr($name, -1)) {
+            return $this->pull(substr($name, 0, -1));
         }
 
-        $name   = explode('.', strtolower($name));
-        $config = $this->config;
+        $name    = explode('.', $name);
+        $name[0] = strtolower($name[0]);
+        $config  = $this->config;
 
         if (!isset($config[$name[0]])) {
             // 如果尚未载入 则动态加载配置文件
-            $module = Container::get('request')->module();
-            $module = $module ? $module . '/' : '';
-            $path   = Container::get('app')->getAppPath() . $module;
-            if (is_dir($path . 'config')) {
-                $file = $path . 'config/' . $name[0] . Container::get('app')->getConfigExt();
-            } elseif (is_dir(Container::get('app')->getConfigPath() . $module)) {
-                $file = Container::get('app')->getConfigPath() . $module . $name[0] . Container::get('app')->getConfigExt();
-            }
-
-            if (isset($file) && is_file($file)) {
-                $this->load($file, $name[0]);
-            }
+            $this->autoLoad($name[0]);
         }
 
         // 按.拆分成多维数组进行判断
@@ -152,8 +180,8 @@ class Config
     /**
      * 设置配置参数 name为数组则为批量设置
      * @access public
-     * @param string|array  $name 配置参数名（支持二级配置 .号分割）
-     * @param mixed         $value 配置值
+     * @param  string|array  $name 配置参数名（支持三级配置 .号分割）
+     * @param  mixed         $value 配置值
      * @return mixed
      */
     public function set($name, $value = null)
@@ -162,14 +190,18 @@ class Config
             if (!strpos($name, '.')) {
                 $name = $this->prefix . '.' . $name;
             }
-            $name = explode('.', strtolower($name));
 
-            $this->config[$name[0]][$name[1]] = $value;
+            $name = explode('.', $name, 3);
+
+            if (count($name) == 2) {
+                $this->config[strtolower($name[0])][$name[1]] = $value;
+            } else {
+                $this->config[strtolower($name[0])][$name[1]][$name[2]] = $value;
+            }
+
             return $value;
         } elseif (is_array($name)) {
             // 批量设置
-            $name = array_change_key_case($name);
-
             if (!empty($value)) {
                 if (isset($this->config[$value])) {
                     $result = array_merge($this->config[$value], $name);
@@ -190,9 +222,31 @@ class Config
     }
 
     /**
+     * 移除配置
+     * @access public
+     * @param  string  $name 配置参数名（支持三级配置 .号分割）
+     * @return void
+     */
+    public function remove($name)
+    {
+        if (!strpos($name, '.')) {
+            $name = $this->prefix . '.' . $name;
+        }
+
+        $name = explode('.', $name, 3);
+
+        if (count($name) == 2) {
+            unset($this->config[strtolower($name[0])][$name[1]]);
+        } else {
+            unset($this->config[strtolower($name[0])][$name[1]][$name[2]]);
+        }
+    }
+
+    /**
      * 重置配置参数
      * @access public
-     * @param string    $prefix  配置前缀名
+     * @param  string    $prefix  配置前缀名
+     * @return void
      */
     public function reset($prefix = '')
     {
@@ -206,8 +260,8 @@ class Config
     /**
      * 设置配置
      * @access public
-     * @param string    $name  参数名
-     * @param mixed     $value 值
+     * @param  string    $name  参数名
+     * @param  mixed     $value 值
      */
     public function __set($name, $value)
     {
@@ -217,7 +271,7 @@ class Config
     /**
      * 获取配置参数
      * @access public
-     * @param string $name 参数名
+     * @param  string $name 参数名
      * @return mixed
      */
     public function __get($name)
@@ -228,7 +282,7 @@ class Config
     /**
      * 检测是否存在参数
      * @access public
-     * @param string $name 参数名
+     * @param  string $name 参数名
      * @return bool
      */
     public function __isset($name)
@@ -236,4 +290,24 @@ class Config
         return $this->has($name);
     }
 
+    // ArrayAccess
+    public function offsetSet($name, $value)
+    {
+        $this->set($name, $value);
+    }
+
+    public function offsetExists($name)
+    {
+        return $this->has($name);
+    }
+
+    public function offsetUnset($name)
+    {
+        $this->remove($name);
+    }
+
+    public function offsetGet($name)
+    {
+        return $this->get($name);
+    }
 }

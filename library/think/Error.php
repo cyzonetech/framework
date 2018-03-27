@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
@@ -20,6 +20,7 @@ class Error
 {
     /**
      * 注册异常处理
+     * @access public
      * @return void
      */
     public static function register()
@@ -32,6 +33,7 @@ class Error
 
     /**
      * Exception Handler
+     * @access public
      * @param  \Exception|\Throwable $e
      */
     public static function appException($e)
@@ -51,26 +53,27 @@ class Error
 
     /**
      * Error Handler
+     * @access public
      * @param  integer $errno   错误编号
      * @param  integer $errstr  详细错误信息
      * @param  string  $errfile 出错的文件
      * @param  integer $errline 出错行号
-     * @param array    $errcontext
      * @throws ErrorException
      */
-    public static function appError($errno, $errstr, $errfile = '', $errline = 0, $errcontext = [])
+    public static function appError($errno, $errstr, $errfile = '', $errline = 0)
     {
-        $exception = new ErrorException($errno, $errstr, $errfile, $errline, $errcontext);
+        $exception = new ErrorException($errno, $errstr, $errfile, $errline);
         if (error_reporting() & $errno) {
             // 将错误信息托管至 think\exception\ErrorException
             throw $exception;
-        } else {
-            self::getExceptionHandler()->report($exception);
         }
+
+        self::getExceptionHandler()->report($exception);
     }
 
     /**
      * Shutdown Handler
+     * @access public
      */
     public static function appShutdown()
     {
@@ -88,6 +91,7 @@ class Error
     /**
      * 确定错误类型是否致命
      *
+     * @access protected
      * @param  int $type
      * @return bool
      */
@@ -99,6 +103,7 @@ class Error
     /**
      * Get an instance of the exception handler.
      *
+     * @access public
      * @return Handle
      */
     public static function getExceptionHandler()
@@ -107,11 +112,14 @@ class Error
 
         if (!$handle) {
             // 异常处理handle
-            $class = Container::get('app')->config('exception_handle');
-            if ($class && class_exists($class) && is_subclass_of($class, "\\think\\exception\\Handle")) {
+            $class = Container::get('config')->get('exception_handle');
+            if ($class && is_string($class) && class_exists($class) && is_subclass_of($class, "\\think\\exception\\Handle")) {
                 $handle = new $class;
             } else {
                 $handle = new Handle;
+                if ($class instanceof \Closure) {
+                    $handle->setRender($class);
+                }
             }
         }
 

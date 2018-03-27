@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
@@ -13,15 +13,40 @@ namespace think;
 
 class Lang
 {
-    // 语言数据
+    /**
+     * 多语言信息
+     * @var array
+     */
     private $lang = [];
-    // 语言作用域
+
+    /**
+     * 当前语言
+     * @var string
+     */
     private $range = 'zh-cn';
-    // 语言自动侦测的变量
+
+    /**
+     * 多语言自动侦测变量名
+     * @var string
+     */
     protected $langDetectVar = 'lang';
-    // 允许语言列表
+
+    /**
+     * 多语言cookie变量
+     * @var string
+     */
+    protected $langCookieVar = 'think_var';
+
+    /**
+     * 允许的多语言列表
+     * @var array
+     */
     protected $allowLangList = [];
-    // Accept-Language转义为对应语言包名称 系统默认配置
+
+    /**
+     * Accept-Language转义为对应语言包名称 系统默认配置
+     * @var string
+     */
     protected $acceptLanguage = [
         'zh-hans-cn' => 'zh-cn',
     ];
@@ -38,9 +63,10 @@ class Lang
 
     /**
      * 设置语言定义(不区分大小写)
-     * @param string|array  $name 语言变量
-     * @param string        $value 语言值
-     * @param string        $range 语言作用域
+     * @access public
+     * @param  string|array  $name 语言变量
+     * @param  string        $value 语言值
+     * @param  string        $range 语言作用域
      * @return mixed
      */
     public function set($name, $value = null, $range = '')
@@ -53,16 +79,17 @@ class Lang
 
         if (is_array($name)) {
             return $this->lang[$range] = array_change_key_case($name) + $this->lang[$range];
-        } else {
-            return $this->lang[$range][strtolower($name)] = $value;
         }
+
+        return $this->lang[$range][strtolower($name)] = $value;
     }
 
     /**
      * 加载语言定义(不区分大小写)
-     * @param string|array  $file   语言文件
-     * @param string        $range  语言作用域
-     * @return mixed
+     * @access public
+     * @param  string|array  $file   语言文件
+     * @param  string        $range  语言作用域
+     * @return array
      */
     public function load($file, $range = '')
     {
@@ -98,10 +125,10 @@ class Lang
 
     /**
      * 获取语言定义(不区分大小写)
-     * @param string|null   $name 语言变量
-     * @param array         $vars 变量替换
-     * @param string        $range 语言作用域
-     * @return mixed
+     * @access public
+     * @param  string|null   $name 语言变量
+     * @param  string        $range 语言作用域
+     * @return bool
      */
     public function has($name, $range = '')
     {
@@ -112,9 +139,10 @@ class Lang
 
     /**
      * 获取语言定义(不区分大小写)
-     * @param string|null   $name 语言变量
-     * @param array         $vars 变量替换
-     * @param string        $range 语言作用域
+     * @access public
+     * @param  string|null   $name 语言变量
+     * @param  array         $vars 变量替换
+     * @param  string        $range 语言作用域
      * @return mixed
      */
     public function get($name = null, $vars = [], $range = '')
@@ -155,6 +183,7 @@ class Lang
 
     /**
      * 自动侦测设置获取语言选择
+     * @access public
      * @return string
      */
     public function detect()
@@ -165,6 +194,9 @@ class Lang
         if (isset($_GET[$this->langDetectVar])) {
             // url中设置了语言变量
             $langSet = strtolower($_GET[$this->langDetectVar]);
+        } elseif (isset($_COOKIE[$this->langCookieVar])) {
+            // Cookie中设置了语言变量
+            $langSet = strtolower($_COOKIE[$this->langCookieVar]);
         } elseif (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             // 自动侦测浏览器语言
             preg_match('/^([a-z\d\-]+)/i', $_SERVER['HTTP_ACCEPT_LANGUAGE'], $matches);
@@ -186,8 +218,22 @@ class Lang
     }
 
     /**
+     * 设置当前语言到Cookie
+     * @access public
+     * @param  string $lang 语言
+     * @return void
+     */
+    public function saveToCookie($lang = null)
+    {
+        $range = $lang ?: $this->range;
+
+        $_COOKIE[$this->langCookieVar] = $range;
+    }
+
+    /**
      * 设置语言自动侦测的变量
-     * @param string $var 变量名称
+     * @access public
+     * @param  string $var 变量名称
      * @return void
      */
     public function setLangDetectVar($var)
@@ -196,8 +242,20 @@ class Lang
     }
 
     /**
+     * 设置语言的cookie保存变量
+     * @access public
+     * @param  string $var 变量名称
+     * @return void
+     */
+    public function setLangCookieVar($var)
+    {
+        $this->langCookieVar = $var;
+    }
+
+    /**
      * 设置允许的语言列表
-     * @param array $list 语言列表
+     * @access public
+     * @param  array $list 语言列表
      * @return void
      */
     public function setAllowLangList($list)

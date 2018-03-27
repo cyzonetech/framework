@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
@@ -17,11 +17,22 @@ use think\response\Redirect;
 
 class Debug
 {
-    // 区间时间信息
+    /**
+     * 区间时间信息
+     * @var array
+     */
     protected $info = [];
-    // 区间内存信息
+
+    /**
+     * 区间内存信息
+     * @var array
+     */
     protected $mem = [];
 
+    /**
+     * 应用对象
+     * @var App
+     */
     protected $app;
 
     public function __construct(App $app)
@@ -31,9 +42,10 @@ class Debug
 
     /**
      * 记录时间（微秒）和内存使用情况
-     * @param string    $name 标记位置
-     * @param mixed     $value 标记值 留空则取当前 time 表示仅记录时间 否则同时记录时间和内存
-     * @return mixed
+     * @access public
+     * @param  string    $name 标记位置
+     * @param  mixed     $value 标记值 留空则取当前 time 表示仅记录时间 否则同时记录时间和内存
+     * @return void
      */
     public function remark($name, $value = '')
     {
@@ -48,9 +60,10 @@ class Debug
 
     /**
      * 统计某个区间的时间（微秒）使用情况
-     * @param string            $start 开始标签
-     * @param string            $end 结束标签
-     * @param integer|string    $dec 小数位
+     * @access public
+     * @param  string            $start 开始标签
+     * @param  string            $end 结束标签
+     * @param  integer|string    $dec 小数位
      * @return integer
      */
     public function getRangeTime($start, $end, $dec = 6)
@@ -64,7 +77,8 @@ class Debug
 
     /**
      * 统计从开始到统计时的时间（微秒）使用情况
-     * @param integer|string $dec 小数位
+     * @access public
+     * @param  integer|string $dec 小数位
      * @return integer
      */
     public function getUseTime($dec = 6)
@@ -74,6 +88,7 @@ class Debug
 
     /**
      * 获取当前访问的吞吐率情况
+     * @access public
      * @return string
      */
     public function getThroughputRate()
@@ -83,9 +98,10 @@ class Debug
 
     /**
      * 记录区间的内存使用情况
-     * @param string            $start 开始标签
-     * @param string            $end 结束标签
-     * @param integer|string    $dec 小数位
+     * @access public
+     * @param  string            $start 开始标签
+     * @param  string            $end 结束标签
+     * @param  integer|string    $dec 小数位
      * @return string
      */
     public function getRangeMem($start, $end, $dec = 2)
@@ -108,7 +124,8 @@ class Debug
 
     /**
      * 统计从开始到统计时的内存使用情况
-     * @param integer|string $dec 小数位
+     * @access public
+     * @param  integer|string $dec 小数位
      * @return string
      */
     public function getUseMem($dec = 2)
@@ -127,10 +144,11 @@ class Debug
 
     /**
      * 统计区间的内存峰值情况
-     * @param string            $start 开始标签
-     * @param string            $end 结束标签
-     * @param integer|string    $dec 小数位
-     * @return mixed
+     * @access public
+     * @param  string            $start 开始标签
+     * @param  string            $end 结束标签
+     * @param  integer|string    $dec 小数位
+     * @return string
      */
     public function getMemPeak($start, $end, $dec = 2)
     {
@@ -152,7 +170,8 @@ class Debug
 
     /**
      * 获取文件加载信息
-     * @param bool  $detail 是否显示详细
+     * @access public
+     * @param  bool  $detail 是否显示详细
      * @return integer|array
      */
     public function getFile($detail = false)
@@ -173,10 +192,11 @@ class Debug
 
     /**
      * 浏览器友好的变量输出
-     * @param mixed         $var 变量
-     * @param boolean       $echo 是否输出 默认为true 如果为false 则返回输出字符串
-     * @param string        $label 标签 默认为空
-     * @param integer       $flags htmlspecialchars flags
+     * @access public
+     * @param  mixed         $var 变量
+     * @param  boolean       $echo 是否输出 默认为true 如果为false 则返回输出字符串
+     * @param  string        $label 标签 默认为空
+     * @param  integer       $flags htmlspecialchars flags
      * @return void|string
      */
     public function dump($var, $echo = true, $label = null, $flags = ENT_SUBSTITUTE)
@@ -203,9 +223,8 @@ class Debug
         if ($echo) {
             echo($output);
             return;
-        } else {
-            return $output;
         }
+        return $output;
     }
 
     public function inject(Response $response, &$content)

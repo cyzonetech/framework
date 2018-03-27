@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
@@ -13,15 +13,42 @@ namespace think;
 
 class Hook
 {
-    private $tags   = [];
+    /**
+     * 钩子行为定义
+     * @var array
+     */
+    private $tags = [];
+
+    /**
+     * 绑定行为列表
+     * @var array
+     */
     protected $bind = [];
+
+    /**
+     * 入口方法名称
+     * @var string
+     */
+    private static $portal = 'run';
+
+    /**
+     * 指定入口方法名称
+     * @access public
+     * @param  string  $name     方法名
+     * @return $this
+     */
+    public function portal($name)
+    {
+        self::$portal = $name;
+        return $this;
+    }
 
     /**
      * 指定行为标识 便于调用
      * @access public
-     * @param string|array  $name     行为标识
-     * @param mixed         $behavior 行为
-     * @return void
+     * @param  string|array  $name     行为标识
+     * @param  mixed         $behavior 行为
+     * @return $this
      */
     public function alias($name, $behavior = null)
     {
@@ -37,9 +64,9 @@ class Hook
     /**
      * 动态添加行为扩展到某个标签
      * @access public
-     * @param string    $tag 标签名称
-     * @param mixed     $behavior 行为名称
-     * @param bool      $first 是否放到开头执行
+     * @param  string    $tag 标签名称
+     * @param  mixed     $behavior 行为名称
+     * @param  bool      $first 是否放到开头执行
      * @return void
      */
     public function add($tag, $behavior, $first = false)
@@ -47,8 +74,7 @@ class Hook
         isset($this->tags[$tag]) || $this->tags[$tag] = [];
 
         if (is_array($behavior) && !is_callable($behavior)) {
-            if (!array_key_exists('_overlay', $behavior) || !$behavior['_overlay']) {
-                unset($behavior['_overlay']);
+            if (!array_key_exists('_overlay', $behavior)) {
                 $this->tags[$tag] = array_merge($this->tags[$tag], $behavior);
             } else {
                 unset($behavior['_overlay']);
@@ -64,8 +90,9 @@ class Hook
     /**
      * 批量导入插件
      * @access public
-     * @param array     $tags 插件信息
-     * @param bool      $recursive 是否递归合并
+     * @param  array     $tags 插件信息
+     * @param  bool      $recursive 是否递归合并
+     * @return void
      */
     public function import(array $tags, $recursive = true)
     {
@@ -81,7 +108,7 @@ class Hook
     /**
      * 获取插件信息
      * @access public
-     * @param string $tag 插件位置 留空获取全部
+     * @param  string $tag 插件位置 留空获取全部
      * @return array
      */
     public function get($tag = '')
@@ -89,17 +116,17 @@ class Hook
         if (empty($tag)) {
             //获取全部的插件信息
             return $this->tags;
-        } else {
-            return array_key_exists($tag, $this->tags) ? $this->tags[$tag] : [];
         }
+
+        return array_key_exists($tag, $this->tags) ? $this->tags[$tag] : [];
     }
 
     /**
      * 监听标签的行为
      * @access public
-     * @param string $tag    标签名称
-     * @param mixed  $params 传入参数
-     * @param bool   $once   只获取一个有效返回值
+     * @param  string $tag    标签名称
+     * @param  mixed  $params 传入参数
+     * @param  bool   $once   只获取一个有效返回值
      * @return mixed
      */
     public function listen($tag, $params = null, $once = false)
@@ -110,10 +137,7 @@ class Hook
         foreach ($tags as $key => $name) {
             $results[$key] = $this->execTag($name, $tag, $params);
 
-            if (false === $results[$key]) {
-                // 如果返回false 则中断行为执行
-                break;
-            } elseif (!is_null($results[$key]) && $once) {
+            if (false === $results[$key] || (!is_null($results[$key]) && $once)) {
                 break;
             }
         }
@@ -124,8 +148,8 @@ class Hook
     /**
      * 执行行为
      * @access public
-     * @param mixed     $class  行为
-     * @param mixed     $params 参数
+     * @param  mixed     $class  行为
+     * @param  mixed     $params 参数
      * @return mixed
      */
     public function exec($class, $params = null)
@@ -136,7 +160,7 @@ class Hook
             if (isset($this->bind[$class])) {
                 $class = $this->bind[$class];
             }
-            $method = [$class, 'run'];
+            $method = [$class, self::$portal];
         }
 
         return Container::getInstance()->invoke($method, [$params]);
@@ -145,9 +169,9 @@ class Hook
     /**
      * 执行某个标签的行为
      * @access protected
-     * @param mixed     $class  要执行的行为
-     * @param string    $tag    方法名（标签名）
-     * @param mixed     $params 参数
+     * @param  mixed     $class  要执行的行为
+     * @param  string    $tag    方法名（标签名）
+     * @param  mixed     $params 参数
      * @return mixed
      */
     protected function execTag($class, $tag = '', $params = null)
@@ -167,7 +191,7 @@ class Hook
             $obj = Container::get($class);
 
             if (!is_callable([$obj, $method])) {
-                $method = 'run';
+                $method = self::$portal;
             }
 
             $call  = [$class, $method];

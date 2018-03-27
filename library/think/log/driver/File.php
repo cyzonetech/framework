@@ -20,9 +20,11 @@ class File
 {
     protected $config = [
         'time_format' => ' c ',
+        'single'      => false,
         'file_size'   => 2097152,
         'path'        => '',
         'apart_level' => [],
+        'max_files'   => 0,
     ];
 
     protected $writed = [];
@@ -35,20 +37,39 @@ class File
         }
 
         if (empty($this->config['path'])) {
-            $this->config['path'] = Container::get('app')->getRuntimePath() . 'log/';
+            $this->config['path'] = Container::get('app')->getRuntimePath() . 'log' . DIRECTORY_SEPARATOR;
+        } elseif (substr($this->config['path'], -1) != DIRECTORY_SEPARATOR) {
+            $this->config['path'] .= DIRECTORY_SEPARATOR;
         }
     }
 
     /**
      * 日志写入接口
      * @access public
-     * @param array $log 日志信息
+     * @param  array $log 日志信息
      * @return bool
      */
     public function save(array $log = [])
     {
-        $cli         = PHP_SAPI == 'cli' ? '_cli' : '';
-        $destination = $this->config['path'] . date('Ym') . '/' . date('d') . $cli . '.log';
+        if ($this->config['single']) {
+            $name        = is_string($this->config['single']) ? $this->config['single'] : 'single';
+            $destination = $this->config['path'] . $name . '.log';
+        } else {
+            $cli = PHP_SAPI == 'cli' ? '_cli' : '';
+
+            if ($this->config['max_files']) {
+                $filename = date('Ymd') . $cli . '.log';
+                $files    = glob($this->config['path'] . '*.log');
+
+                if (count($files) > $this->config['max_files']) {
+                    unlink($files[0]);
+                }
+            } else {
+                $filename = date('Ym') . DIRECTORY_SEPARATOR . date('d') . $cli . '.log';
+            }
+
+            $destination = $this->config['path'] . $filename;
+        }
 
         $path = dirname($destination);
         !is_dir($path) && mkdir($path, 0755, true);
@@ -65,7 +86,13 @@ class File
 
             if (in_array($type, $this->config['apart_level'])) {
                 // 独立记录的日志级别
-                $filename = $path . '/' . date('d') . '_' . $type . $cli . '.log';
+                if ($this->config['single']) {
+                    $filename = $path . DIRECTORY_SEPARATOR . $name . '_' . $type . '.log';
+                } elseif ($this->config['max_files']) {
+                    $filename = $path . DIRECTORY_SEPARATOR . date('Ymd') . '_' . $type . $cli . '.log';
+                } else {
+                    $filename = $path . DIRECTORY_SEPARATOR . date('d') . '_' . $type . $cli . '.log';
+                }
 
                 $this->write($level, $filename, true);
             } else {
@@ -82,17 +109,21 @@ class File
 
     /**
      * 日志写入
-     * @access public
-     * @param array     $message 日志信息
-     * @param string    $destination 日志文件
-     * @param bool      $apart 是否独立文件写入
+     * @access protected
+     * @param  array     $message 日志信息
+     * @param  string    $destination 日志文件
+     * @param  bool      $apart 是否独立文件写入
      * @return bool
      */
     protected function write($message, $destination, $apart = false)
     {
         // 检测日志文件大小，超过配置大小则备份日志文件重新生成
         if (is_file($destination) && floor($this->config['file_size']) <= filesize($destination)) {
-            rename($destination, dirname($destination) . '/' . time() . '-' . basename($destination));
+            try {
+                rename($destination, dirname($destination) . DIRECTORY_SEPARATOR . time() . '-' . basename($destination));
+            } catch (\Exception $e) {
+            }
+
             $this->writed[$destination] = false;
         }
 
@@ -110,11 +141,10 @@ class File
             }
 
             $now     = date($this->config['time_format']);
-            $server  = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '0.0.0.0';
-            $remote  = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+            $ip      = Container::get('request')->ip();
             $method  = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'CLI';
             $uri     = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
-            $message = "---------------------------------------------------------------\r\n[{$now}] {$server} {$remote} {$method} {$uri}\r\n" . $message;
+            $message = "---------------------------------------------------------------\r\n[{$now}] {$ip} {$method} {$uri}\r\n" . $message;
 
             $this->writed[$destination] = true;
         }

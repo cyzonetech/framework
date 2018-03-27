@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
@@ -13,6 +13,10 @@ namespace think;
 
 class Cookie
 {
+    /**
+     * 配置参数
+     * @var array
+     */
     protected $config = [
         // cookie 名称前缀
         'prefix'    => '',
@@ -25,16 +29,21 @@ class Cookie
         //  cookie 启用安全传输
         'secure'    => false,
         // httponly设置
-        'httponly'  => '',
+        'httponly'  => false,
         // 是否使用 setcookie
         'setcookie' => true,
     ];
 
+    /**
+     * 是否初始化
+     * @var bool
+     */
     protected $init;
 
     /**
      * Cookie初始化
-     * @param array $config
+     * @access public
+     * @param  array $config
      * @return void
      */
     public function init(array $config = [])
@@ -54,7 +63,8 @@ class Cookie
 
     /**
      * 设置或者获取cookie作用域（前缀）
-     * @param string $prefix
+     * @access public
+     * @param  string $prefix
      * @return string|void
      */
     public function prefix($prefix = '')
@@ -69,12 +79,11 @@ class Cookie
     /**
      * Cookie 设置、获取、删除
      *
-     * @param string $name  cookie名称
-     * @param mixed  $value cookie值
-     * @param mixed  $option 可选参数 可能会是 null|integer|string
-     *
-     * @return mixed
-     * @internal param mixed $options cookie参数
+     * @access public
+     * @param  string $name  cookie名称
+     * @param  mixed  $value cookie值
+     * @param  mixed  $option 可选参数 可能会是 null|integer|string
+     * @return void
      */
     public function set($name, $value = '', $option = null)
     {
@@ -97,7 +106,7 @@ class Cookie
 
         // 设置cookie
         if (is_array($value)) {
-            array_walk_recursive($value, $this->jsonFormatProtect, 'encode');
+            array_walk_recursive($value, [$this, 'jsonFormatProtect'], 'encode');
             $value = 'think:' . json_encode($value);
         }
 
@@ -112,9 +121,10 @@ class Cookie
 
     /**
      * 永久保存Cookie数据
-     * @param string $name  cookie名称
-     * @param mixed  $value cookie值
-     * @param mixed  $option 可选参数 可能会是 null|integer|string
+     * @access public
+     * @param  string $name  cookie名称
+     * @param  mixed  $value cookie值
+     * @param  mixed  $option 可选参数 可能会是 null|integer|string
      * @return void
      */
     public function forever($name, $value = '', $option = null)
@@ -130,8 +140,9 @@ class Cookie
 
     /**
      * 判断Cookie数据
-     * @param string        $name cookie名称
-     * @param string|null   $prefix cookie前缀
+     * @access public
+     * @param  string        $name cookie名称
+     * @param  string|null   $prefix cookie前缀
      * @return bool
      */
     public function has($name, $prefix = null)
@@ -146,8 +157,9 @@ class Cookie
 
     /**
      * Cookie获取
-     * @param string        $name cookie名称 留空获取全部
-     * @param string|null   $prefix cookie前缀
+     * @access public
+     * @param  string        $name cookie名称 留空获取全部
+     * @param  string|null   $prefix cookie前缀
      * @return mixed
      */
     public function get($name = '', $prefix = null)
@@ -174,7 +186,7 @@ class Cookie
             if (0 === strpos($value, 'think:')) {
                 $value = substr($value, 6);
                 $value = json_decode($value, true);
-                array_walk_recursive($value, $this->jsonFormatProtect, 'decode');
+                array_walk_recursive($value, [$this, 'jsonFormatProtect'], 'decode');
             }
         } else {
             $value = null;
@@ -185,9 +197,10 @@ class Cookie
 
     /**
      * Cookie删除
-     * @param string        $name cookie名称
-     * @param string|null   $prefix cookie前缀
-     * @return mixed
+     * @access public
+     * @param  string        $name cookie名称
+     * @param  string|null   $prefix cookie前缀
+     * @return void
      */
     public function delete($name, $prefix = null)
     {
@@ -207,8 +220,9 @@ class Cookie
 
     /**
      * Cookie清空
-     * @param string|null $prefix cookie前缀
-     * @return mixed
+     * @access public
+     * @param  string|null $prefix cookie前缀
+     * @return void
      */
     public function clear($prefix = null)
     {

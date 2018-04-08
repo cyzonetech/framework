@@ -20,7 +20,7 @@ use think\route\Dispatch;
  */
 class App implements \ArrayAccess
 {
-    const VERSION = '5.1.7';
+    const VERSION = '5.1.8';
 
     /**
      * 当前模块路径
@@ -283,12 +283,13 @@ class App implements \ArrayAccess
             if ('' == $module) {
                 // 加载系统助手函数
                 include $this->thinkPath . 'helper.php';
-                // 加载全局中间件
-                if (is_file($path . 'middleware.php')) {
-                    $middleware = include $path . 'middleware.php';
-                    if (is_array($middleware)) {
-                        $this->middleware->import($middleware);
-                    }
+            }
+
+            // 加载中间件
+            if (is_file($path . 'middleware.php')) {
+                $middleware = include $path . 'middleware.php';
+                if (is_array($middleware)) {
+                    $this->middleware->import($middleware);
                 }
             }
 
@@ -504,6 +505,10 @@ class App implements \ArrayAccess
             if (is_file($filename)) {
                 include $filename;
             }
+        }
+
+        if (is_file($this->runtimePath . 'rule_regex.php')) {
+            $this->route->setRuleRegexs(include $this->runtimePath . 'rule_regex.php');
         }
 
         // 是否强制路由模式

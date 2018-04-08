@@ -15,6 +15,13 @@ use think\Exception;
 
 class File
 {
+
+    private $vars = null;
+
+    private $config = null;
+
+    private $engine = null;
+
     /**
      * 写入编译缓存
      * @access public
@@ -44,8 +51,12 @@ class File
      * @param  array   $vars 变量数组
      * @return void
      */
-    public function read($cacheFile, $vars = [])
+    public function read($cacheFile, &$vars = null, &$config = null, &$engine = null)
     {
+        $this->vars = $vars;
+        $this->config = $config;
+        $this->engine = $engine;
+
         if (!empty($vars) && is_array($vars)) {
             // 模板阵列变量分解成为独立变量
             extract($vars, EXTR_OVERWRITE);

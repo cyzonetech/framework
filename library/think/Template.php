@@ -217,7 +217,7 @@ class Template
             ob_implicit_flush(0);
 
             // 读取编译存储
-            $this->storage->read($cacheFile, $this->data);
+            $this->storage->read($cacheFile, $vars, $config, $this);
 
             // 获取并清空缓存
             $content = ob_get_clean();
@@ -257,7 +257,7 @@ class Template
         }
 
         // 读取编译存储
-        $this->storage->read($cacheFile, $this->data);
+        $this->storage->read($cacheFile, $vars, $config, $this);
     }
 
     /**
@@ -529,22 +529,16 @@ class Template
                     $array = $this->parseAttr($match[0]);
                     $file  = $array['file'];
                     unset($array['file']);
-
-                    // 分析模板文件名并读取内容
-                    $parseStr = $this->parseTemplateName($file);
-
-                    foreach ($array as $k => $v) {
-                        // 以$开头字符串转换成模板变量
-                        if (0 === strpos($v, '$')) {
-                            $v = $this->get(substr($v, 1));
+                    //多模板支持，使用,分隔
+                    if (strpos($file, ',')) {
+                        $files = explode(',', $file);
+                        foreach ($files as $file) {
+                            $parseStr[] = '<?php $this->engine->fetch("' . $file . '", $this->vars, $this->config); ?>';
                         }
-
-                        $parseStr = str_replace('[' . $k . ']', $v, $parseStr);
+                    } else {
+                        $parseStr[] = '<?php $this->engine->fetch("' . $file . '", $this->vars, $this->config); ?>';
                     }
-
-                    $content = str_replace($match[0], $parseStr, $content);
-                    // 再次对包含文件进行模板分析
-                    $func($parseStr);
+                    $content = str_replace($match[0], implode($parseStr), $content);
                 }
                 unset($matches);
             }
@@ -1229,6 +1223,7 @@ class Template
 
         if (is_file($template)) {
             // 记录模板文件的更新时间
+            $this->includeFile = [];
             $this->includeFile[$template] = filemtime($template);
 
             return $template;

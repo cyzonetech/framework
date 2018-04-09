@@ -232,7 +232,7 @@ class Request
             parse_str(html_entity_decode($info['query']), $query);
             if (!empty($params)) {
                 $params      = array_replace($query, $params);
-                $queryString = http_build_query($query, '', '&');
+                $queryString = http_build_query($params, '', '&');
             } else {
                 $params      = $query;
                 $queryString = $info['query'];
@@ -1273,7 +1273,11 @@ class Request
             return $ip[$type];
         }
 
-        if ($adv) {
+        $httpAgentIp = Config::get('http_agent_ip');
+
+        if ($httpAgentIp && isset($_SERVER[$httpAgentIp])) {
+            $ip = $_SERVER[$httpAgentIp];
+        } elseif ($adv) {
             if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
                 $arr = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
                 $pos = array_search('unknown', $arr);
@@ -1466,11 +1470,12 @@ class Request
      */
     public function action($action = null)
     {
-        if (!is_null($action)) {
+        if (!is_null($action) && !is_bool($action)) {
             $this->action = $action;
             return $this;
         } else {
-            return $this->action ?: '';
+            $name = $this->action ?: '';
+            return true === $action ? $name : strtolower($name);
         }
     }
 

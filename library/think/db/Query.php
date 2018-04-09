@@ -708,6 +708,7 @@ class Query
         // 传入的表名为数组
         if (is_array($join)) {
             $table = $join;
+            $alias = array_shift($join);
         } else {
             $join = trim($join);
             if (false !== strpos($join, '(')) {
@@ -827,7 +828,7 @@ class Query
     {
         $fields = is_string($field) ? explode(',', $field) : $field;
         foreach ($fields as $field) {
-            $this->data($field, ['inc', $field, $step]);
+            $this->data($field, ['inc', $step]);
         }
         return $this;
     }
@@ -843,7 +844,7 @@ class Query
     {
         $fields = is_string($field) ? explode(',', $field) : $field;
         foreach ($fields as $field) {
-            $this->data($field, ['dec', $field, $step]);
+            $this->data($field, ['dec', $step]);
         }
         return $this;
     }
@@ -873,9 +874,9 @@ class Query
     public function view($join, $field = true, $on = null, $type = 'INNER')
     {
         $this->options['view'] = true;
-        if (is_array($join) && key($join) !== 0) {
+        if (is_array($join) && key($join) === 0) {
             foreach ($join as $key => $val) {
-                $this->view($key, $val[0], isset($val[1]) ? $val[1] : null, isset($val[2]) ? $val[2] : 'INNER');
+                $this->view($val[0], $val[1], isset($val[2]) ? $val[2] : null, isset($val[3]) ? $val[3] : 'INNER');
             }
         } else {
             $fields = [];

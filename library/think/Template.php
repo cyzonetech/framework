@@ -526,6 +526,7 @@ class Template
         $func  = function ($template) use (&$func, &$regex, &$content) {
             if (preg_match_all($regex, $template, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $match) {
+                    $parseStr = [];
                     $array = $this->parseAttr($match[0]);
                     $file  = $array['file'];
                     unset($array['file']);
@@ -1223,7 +1224,6 @@ class Template
 
         if (is_file($template)) {
             // 记录模板文件的更新时间
-            $this->includeFile = [];
             $this->includeFile[$template] = filemtime($template);
 
             return $template;

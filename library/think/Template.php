@@ -404,6 +404,9 @@ class Template
         // 检查include语法
         $this->parseInclude($content);
 
+        // 检查template语法
+        $this->parseTemplate($content);
+
         // 解析继承
         $this->parseExtend($content);
 
@@ -545,6 +548,44 @@ class Template
         // 替换模板中的include标签
         $func($content);
     }
+
+
+    /**
+     * 解析模板中的template标签
+     * @access private
+     * @param  string $content 要解析的模板内容
+     * @return void
+     */
+    private function parseTemplate(&$content)
+    {
+        $regex = $this->getRegex('template');
+        $func  = function ($template) use (&$func, &$regex, &$content) {
+            if (preg_match_all($regex, $template, $matches, PREG_SET_ORDER)) {
+                foreach ($matches as $match) {
+                    $parseStr = [];
+                    $array = $this->parseAttr($match[0]);
+                    $file  = $array['file'];
+                    unset($array['file']);
+
+                    //多模板支持，使用,分隔
+                    if (strpos($file, ',')) {
+                        $files = explode(',', $file);
+                        foreach ($files as $file) {
+                            $parseStr[] = '<?php $this->engine->fetch("' . $file . '", $this->vars, $this->config); ?>';
+                        }
+                    } else {
+                        $parseStr[] = '<?php $this->engine->fetch("' . $file . '", $this->vars, $this->config); ?>';
+                    }
+                    $content = str_replace($match[0], implode($parseStr), $content);
+                }
+                unset($matches);
+            }
+        };
+
+        // 替换模板中的template标签
+        $func($content);
+    }
+
 
     /**
      * 解析模板中的extend标签
@@ -1292,6 +1333,8 @@ class Template
                     $regex = '<!--###literal(\d+)###-->';
                     break;
                 case 'include':
+                    $name = 'file';
+                case 'template':
                     $name = 'file';
                 case 'taglib':
                 case 'layout':

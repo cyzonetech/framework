@@ -26,6 +26,10 @@ class Template
      */
     protected $data = [];
 
+    protected $baseBlocks = [];
+
+    protected $blocks = [];
+
     /**
      * 模板配置参数
      * @var array
@@ -352,24 +356,6 @@ class Template
      */
     private function compiler(&$content, $cacheFile)
     {
-        // 判断是否启用布局
-        if ($this->config['layout_on']) {
-            if (false !== strpos($content, '{__NOLAYOUT__}')) {
-                // 可以单独定义不使用布局
-                $content = str_replace('{__NOLAYOUT__}', '', $content);
-            } else {
-                // 读取布局模板
-                $layoutFile = $this->parseTemplateFile($this->config['layout_name']);
-
-                if ($layoutFile) {
-                    // 替换布局的主体内容
-                    $content = str_replace($this->config['layout_item'], $content, file_get_contents($layoutFile));
-                }
-            }
-        } else {
-            $content = str_replace('{__NOLAYOUT__}', '', $content);
-        }
-
         // 模板解析
         $this->parse($content);
 
@@ -409,14 +395,14 @@ class Template
             return;
         }
 
+        // 解析布局
+        $this->parseLayout($content);
+
         // 替换literal标签内容
         $this->parseLiteral($content);
 
         // 解析继承
         $this->parseExtend($content);
-
-        // 解析布局
-        $this->parseLayout($content);
 
         // 检查include语法
         $this->parseInclude($content);
@@ -492,8 +478,23 @@ class Template
      */
     private function parseLayout(&$content)
     {
-        // 读取模板中的布局标签
+        // 判断是否启用布局
+        if ($this->config['layout_on']) {
+            if (false !== strpos($content, '{__NOLAYOUT__}')) {
+                // 可以单独定义不使用布局
+                $content = str_replace('{__NOLAYOUT__}', '', $content);
+            } else {
+                // 读取布局模板
+                $layoutFile = $this->parseTemplateFile($this->config['layout_name']);
+
+                if ($layoutFile) {
+                    // 替换布局的主体内容
+                    $content = str_replace($this->config['layout_item'], $content, file_get_contents($layoutFile));
+                }
+            }
+        }
         if (preg_match($this->getRegex('layout'), $content, $matches)) {
+            // 读取模板中的布局标签
             // 替换Layout标签
             $content = str_replace($matches[0], '', $content);
             // 解析Layout标签
@@ -513,6 +514,7 @@ class Template
             $content = str_replace('{__NOLAYOUT__}', '', $content);
         }
     }
+
 
     /**
      * 解析模板中的include标签
@@ -581,6 +583,12 @@ class Template
                 $baseBlocks = $this->parseBlock($template, true);
 
                 if (empty($extend)) {
+                    //替换template中的block数据标签
+                    if ($this->blocks) {
+                        foreach ($this->blocks as $name => $val) {
+                            $template = str_replace($val['begin'] . $val['content'] . $val['end'], '', $template);
+                        }
+                    }
                     // 无extend标签但有block标签的情况
                     $extend = $template;
                 }
@@ -588,41 +596,42 @@ class Template
         };
 
         $func($content);
+        unset($blocks, $baseBlocks);
 
         if (!empty($extend)) {
-            if ($baseBlocks) {
+            if ($this->baseBlocks) {
                 $children = [];
-                foreach ($baseBlocks as $name => $val) {
+                foreach ($this->baseBlocks as $name => $val) {
                     $replace = $val['content'];
 
                     if (!empty($children[$name])) {
                         // 如果包含有子block标签
                         foreach ($children[$name] as $key) {
-                            $replace = str_replace($baseBlocks[$key]['begin'] . $baseBlocks[$key]['content'] . $baseBlocks[$key]['end'], $blocks[$key]['content'], $replace);
+                            $replace = str_replace($this->baseBlocks[$key]['begin'] . $this->baseBlocks[$key]['content'] . $this->baseBlocks[$key]['end'], $this->blocks[$key]['content'], $replace);
                         }
                     }
 
-                    if (isset($blocks[$name])) {
+                    if (isset($this->blocks[$name])) {
                         // 带有{__block__}表示与所继承模板的相应标签合并，而不是覆盖
-                        $replace = str_replace(['{__BLOCK__}', '{__block__}'], $replace, $blocks[$name]['content']);
+                        $replace = str_replace(['{__BLOCK__}', '{__block__}'], $replace, $this->blocks[$name]['content']);
 
                         if (!empty($val['parent'])) {
                             // 如果不是最顶层的block标签
                             $parent = $val['parent'];
 
-                            if (isset($blocks[$parent])) {
-                                $blocks[$parent]['content'] = str_replace($blocks[$name]['begin'] . $blocks[$name]['content'] . $blocks[$name]['end'], $replace, $blocks[$parent]['content']);
+                            if (isset($this->blocks[$parent])) {
+                                $this->blocks[$parent]['content'] = str_replace($this->blocks[$name]['begin'] . $this->blocks[$name]['content'] . $this->blocks[$name]['end'], $replace, $this->blocks[$parent]['content']);
                             }
 
-                            $blocks[$name]['content'] = $replace;
-                            $children[$parent][]      = $name;
+                            $this->blocks[$name]['content'] = $replace;
+                            $children[$parent][] = $name;
 
                             continue;
                         }
                     } elseif (!empty($val['parent'])) {
                         // 如果子标签没有被继承则用原值
                         $children[$val['parent']][] = $name;
-                        $blocks[$name]              = $val;
+                        $this->blocks[$name] = $val;
                     }
 
                     if (!$val['parent']) {
@@ -633,7 +642,6 @@ class Template
             }
 
             $content = $extend;
-            unset($blocks, $baseBlocks);
         }
     }
 
@@ -694,12 +702,20 @@ class Template
                         $start  = $tag['offset'] + strlen($tag['tag']);
                         $length = $match[0][1] - $start;
 
-                        $result[$tag['name']] = [
+                        $block = [
                             'begin'   => $tag['tag'],
                             'content' => substr($content, $start, $length),
                             'end'     => $match[0][0],
                             'parent'  => count($right) ? end($right)['name'] : '',
                         ];
+                        $result[$tag['name']] = $block;
+
+                        //根据标签内内容放入$this->blocks与$this->baseBlocks
+                        if ($block['content'] == '' || preg_match('/\{__BLOCK__\}|\{__block__\}/', $block['content'])) {
+                            $this->baseBlocks[$tag['name']] = $block;
+                        } else {
+                            $this->blocks[$tag['name']] = $block;
+                        }
 
                         $keys[$tag['name']] = $match[0][1];
                     }

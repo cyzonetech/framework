@@ -401,11 +401,11 @@ class Template
         // 替换literal标签内容
         $this->parseLiteral($content);
 
-        // 解析继承
-        $this->parseExtend($content);
-
         // 检查include语法
         $this->parseInclude($content);
+
+        // 解析继承
+        $this->parseExtend($content);
 
         // 替换包含文件中literal标签内容
         $this->parseLiteral($content);
@@ -492,8 +492,7 @@ class Template
                     $content = str_replace($this->config['layout_item'], $content, file_get_contents($layoutFile));
                 }
             }
-        }
-        if (preg_match($this->getRegex('layout'), $content, $matches)) {
+        } elseif (preg_match($this->getRegex('layout'), $content, $matches)) {
             // 读取模板中的布局标签
             // 替换Layout标签
             $content = str_replace($matches[0], '', $content);
@@ -528,20 +527,16 @@ class Template
         $func  = function ($template) use (&$func, &$regex, &$content) {
             if (preg_match_all($regex, $template, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $match) {
-                    $parseStr = [];
                     $array = $this->parseAttr($match[0]);
                     $file  = $array['file'];
                     unset($array['file']);
-                    //多模板支持，使用,分隔
-                    if (strpos($file, ',')) {
-                        $files = explode(',', $file);
-                        foreach ($files as $file) {
-                            $parseStr[] = '<?php $this->engine->fetch("' . $file . '", $this->vars, $this->config); ?>';
-                        }
-                    } else {
-                        $parseStr[] = '<?php $this->engine->fetch("' . $file . '", $this->vars, $this->config); ?>';
-                    }
-                    $content = str_replace($match[0], implode($parseStr), $content);
+
+                    // 分析模板文件名并读取内容
+                    $parseStr = $this->parseTemplateName($file);
+                    //替换模板内容
+                    $content = str_replace($match[0], $parseStr, $content);
+                    // 递归检查包含
+                    $func($content);
                 }
                 unset($matches);
             }
@@ -569,6 +564,9 @@ class Template
                     $array[$matches['name']] = 1;
                     // 读取继承模板
                     $extend = $this->parseTemplateName($matches['name']);
+
+                    // 替换继承模板中的include标签
+                    $this->parseInclude($extend);
 
                     // 递归检查继承
                     $func($extend);

@@ -1447,7 +1447,6 @@ class Query
             return $this->parseArrayWhereItems($field, $logic);
         } elseif ($field instanceof \Closure) {
             $where = $field;
-            $field = '';
         } elseif (is_string($field)) {
             if (preg_match('/[,=\<\'\"\(\s]/', $field)) {
                 return $this->whereRaw($field, $op);
@@ -1460,11 +1459,7 @@ class Query
         }
 
         if (!empty($where)) {
-            if (isset($this->options['where'][$logic][$field])) {
-                $this->options['where'][$logic][] = $where;
-            } else {
-                $this->options['where'][$logic][$field] = $where;
-            }
+            $this->options['where'][$logic][] = $where;
         }
 
         return $this;
@@ -1490,9 +1485,9 @@ class Query
             if (in_array(strtoupper($op), ['NULL', 'NOTNULL', 'NOT NULL'], true)) {
                 // null查询
                 $where = [$field, $op, ''];
-            } elseif (in_array($op, ['=', null])) {
+            } elseif (in_array(strtolower($op), ['=', 'eq', null], true)) {
                 $where = [$field, 'NULL', ''];
-            } elseif (in_array($op, ['<>', 'neq'])) {
+            } elseif (in_array(strtolower($op), ['<>', 'neq'], true)) {
                 $where = [$field, 'NOTNULL', ''];
             } else {
                 // 字段相等查询
@@ -1517,11 +1512,7 @@ class Query
         if (key($field) !== 0) {
             $where = [];
             foreach ($field as $key => $val) {
-                if (is_null($val)) {
-                    $where[$key] = [$key, 'NULL', ''];
-                } else {
-                    $where[$key] = !is_scalar($val) ? $val : [$key, '=', $val];
-                }
+                $where[] = is_null($val) ? [$key, 'NULL', ''] : [$key, '=', $val];
             }
         } else {
             // 数组批量查询
@@ -1781,7 +1772,11 @@ class Query
                 $field = $this->options['via'] . '.' . $field;
             }
 
-            $field = empty($order) ? $field : [$field => $order];
+            if (strpos($field, ',')) {
+                $field = array_map('trim', explode(',', $field));
+            } else {
+                $field = empty($order) ? $field : [$field => $order];
+            }
         } elseif (!empty($this->options['via'])) {
             foreach ($field as $key => $val) {
                 if (is_numeric($key)) {

@@ -20,7 +20,7 @@ use think\route\Dispatch;
  */
 class App implements \ArrayAccess
 {
-    const VERSION = '5.1.8';
+    const VERSION = '5.1.9';
 
     /**
      * 当前模块路径
@@ -126,7 +126,7 @@ class App implements \ArrayAccess
 
     public function __construct($appPath = '')
     {
-        $this->appPath   = $appPath ? realpath($appPath) : $this->getAppPath();
+        $this->appPath   = $appPath ? realpath($appPath) . DIRECTORY_SEPARATOR : $this->getAppPath();
         $this->container = Container::getInstance();
     }
 

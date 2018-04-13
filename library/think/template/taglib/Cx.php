@@ -47,7 +47,7 @@ class Cx extends Taglib
         'assign'     => ['attr' => 'name,value', 'close' => 0],
         'define'     => ['attr' => 'name,value', 'close' => 0],
         'for'        => ['attr' => 'start,end,name,comparison,step'],
-        'url'        => ['attr' => 'link,vars,suffix,domain', 'close' => 0, 'expression' => true],
+        //'url'        => ['attr' => 'link,vars,suffix,domain', 'close' => 0, 'expression' => true],
         'function'   => ['attr' => 'name,vars,use,call'],
     ];
 

@@ -401,7 +401,7 @@ class App implements \ArrayAccess
             } elseif (!is_null($data)) {
                 // 默认自动识别响应输出类型
                 $isAjax = $request->isAjax();
-                $type   = $isAjax ? $this->config('app.default_ajax_return') : $this->config('app.default_return_type');
+                $type   = $isAjax && is_array($data) ? $this->config('app.default_ajax_return') : $this->config('app.default_return_type');
 
                 $response = Response::create($data, $type);
             } else {

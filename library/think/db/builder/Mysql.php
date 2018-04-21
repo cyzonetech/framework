@@ -12,6 +12,7 @@
 namespace think\db\builder;
 
 use think\db\Builder;
+use think\db\Expression;
 use think\db\Query;
 
 /**
@@ -31,6 +32,7 @@ class Mysql extends Builder
         'parseBetweenTime' => ['BETWEEN TIME', 'NOT BETWEEN TIME'],
         'parseTime'        => ['< TIME', '> TIME', '<= TIME', '>= TIME'],
         'parseExists'      => ['NOT EXISTS', 'EXISTS'],
+        'parseColumn'      => ['COLUMN'],
     ];
 
     protected $insertAllSql = '%INSERT% INTO %TABLE% (%FIELD%) VALUES %DATA% %COMMENT%';
@@ -70,7 +72,7 @@ class Mysql extends Builder
 
         $fields = [];
         foreach ($insertFields as $field) {
-            $fields[] = $this->parseKey($query, $field, true);
+            $fields[] = $this->parseKey($query, $field);
         }
 
         return str_replace(
@@ -88,23 +90,23 @@ class Mysql extends Builder
     /**
      * 正则查询
      * @access protected
-     * @param  Query     $query        查询对象
-     * @param  string    $key
-     * @param  string    $exp
-     * @param  mixed     $value
-     * @param  string    $field
+     * @param  Query        $query        查询对象
+     * @param  string       $key
+     * @param  string       $exp
+     * @param  Expression   $value
+     * @param  string       $field
      * @return string
      */
-    protected function parseRegexp(Query $query, $key, $exp, $value, $field)
+    protected function parseRegexp(Query $query, $key, $exp, Expression $value, $field)
     {
-        return $key . ' ' . $exp . ' ' . $value;
+        return $key . ' ' . $exp . ' ' . $value->getValue();
     }
 
     /**
      * 字段和表名处理
      * @access public
      * @param  Query     $query 查询对象
-     * @param  string    $key   字段名
+     * @param  mixed     $key   字段名
      * @param  bool      $strict   严格检测
      * @return string
      */
@@ -112,7 +114,10 @@ class Mysql extends Builder
     {
         if (is_int($key)) {
             return $key;
+        } elseif ($key instanceof Expression) {
+            return $key->getValue();
         }
+
         $key = trim($key);
 
         if (strpos($key, '->') && false === strpos($key, '(')) {

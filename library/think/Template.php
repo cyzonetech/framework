@@ -413,6 +413,9 @@ class Template
         // 替换包含文件中literal标签内容
         $this->parseLiteral($content);
 
+        // 解析TopCms兼容语法
+        $this->parseTopCms($content);
+
         // 检查PHP语法
         $this->parsePhp($content);
 
@@ -472,6 +475,35 @@ class Template
             throw new Exception('not allow php tag');
         }
     }
+
+    private function parseTopCms(&$content)
+    {
+        $rules = [
+            '/([\n\r]+)\t+/s' => function ($m) {
+                return $m[1];
+            },
+            '/\<\!\-\-#.+?#\-\-\>/s' => function () {
+                return '';
+            },
+            '/\<\!\-\-\{(.+?)\}\-\-\>/s' => function ($m) {
+                return '{' . $m[1] . '}';
+            },
+            '/\{loop\s+(\S+)\s+(\S+)\}/' => function ($m) {
+                return '<?php if(is_array(' . $m[1] . ')): foreach(' . $m[1] . ' AS ' . $m[2] . '): ?>';
+            },
+            '/\{loop\s+(\S+)\s+(\S+)\s+(\S+)\}/' => function ($m) {
+                return '<?php if(is_array(' . $m[1] . ')): foreach(' . $m[1] . ' AS ' . $m[2] . ' => ' . $m[3] . '): ?>';
+            },
+            '/\{\/loop\}/' => function () {
+                return '<?php endforeach; endif; ?>';
+            },
+            '/\{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)\}/s' => function ($m) {
+                return '<?php echo ' . $m[1] . ';?>';
+            },
+        ];
+        $content = preg_replace_callback_array($rules, $content);
+    }
+
 
     /**
      * 解析模板中的布局标签

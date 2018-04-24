@@ -23,20 +23,20 @@ class TopCms
     // 模板引擎参数
     protected $config = [
         // 视图基础目录（集中式）
-        'view_base'   => '',
+        'view_base' => '',
         // 模板起始路径
-        'view_path'   => '',
+        'view_path' => '',
         // 模板文件后缀
         'view_suffix' => 'html',
         // 模板文件名分隔符
-        'view_depr'   => DIRECTORY_SEPARATOR,
+        'view_depr' => DIRECTORY_SEPARATOR,
         // 是否开启模板编译缓存,设为false则每次都会重新编译
-        'tpl_cache'   => true,
+        'tpl_cache' => true,
     ];
 
     public function __construct($config = [])
     {
-        $this->config = array_merge($this->config, (array) $config);
+        $this->config = array_merge($this->config, (array)$config);
         if (empty($this->config['view_path'])) {
             $this->config['view_path'] = Container::get('app')->getModulePath() . 'view' . DIRECTORY_SEPARATOR;
         }
@@ -63,13 +63,16 @@ class TopCms
     /**
      * 渲染模板文件
      * @access public
-     * @param  string    $template 模板文件
-     * @param  array     $data 模板变量
-     * @param  array     $config 模板参数
+     * @param  string $template 模板文件
+     * @param  array $data 模板变量
+     * @param  array $config 模板参数
      * @return void
      */
     public function fetch($template, $data = [], $config = [])
     {
+        //处理模板后缀
+        $template = preg_replace('/\.html$/i', '', $template);
+
         if ('' == pathinfo($template, PATHINFO_EXTENSION)) {
             // 获取模板文件名
             $template = $this->parseTemplate($template);
@@ -90,9 +93,9 @@ class TopCms
     /**
      * 渲染模板内容
      * @access public
-     * @param  string    $template 模板内容
-     * @param  array     $data 模板变量
-     * @param  array     $config 模板参数
+     * @param  string $template 模板内容
+     * @param  array $data 模板变量
+     * @param  array $config 模板参数
      * @return void
      */
     public function display($template, $data = [], $config = [])
@@ -119,8 +122,8 @@ class TopCms
 
         if ($this->config['view_base']) {
             // 基础视图目录
-            $module = isset($module) ? $module : $request->module();
-            $path   = $this->config['view_base'] . ($module ? $module . DIRECTORY_SEPARATOR : '');
+            $template = '/' . ltrim($template, '/');
+            $path = $this->config['view_base'];
         } else {
             $path = isset($module) ? Container::get('app')->getAppPath() . $module . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : $this->config['view_path'];
         }
@@ -128,7 +131,7 @@ class TopCms
         $depr = $this->config['view_depr'];
 
         if (0 !== strpos($template, '/')) {
-            $template   = str_replace(['/', ':'], $depr, $template);
+            $template = str_replace(['/', ':'], $depr, $template);
             $controller = Loader::parseName($request->controller());
             if ($controller) {
                 $controller = preg_replace('/^admin[\.\/]/', '', $controller);
@@ -149,8 +152,8 @@ class TopCms
     /**
      * 配置或者获取模板引擎参数
      * @access private
-     * @param  string|array  $name 参数名
-     * @param  mixed         $value 参数值
+     * @param  string|array $name 参数名
+     * @param  mixed $value 参数值
      * @return mixed
      */
     public function config($name, $value = null)
@@ -162,7 +165,7 @@ class TopCms
             return $this->template->config($name);
         } else {
             $this->template->$name = $value;
-            $this->config[$name]   = $value;
+            $this->config[$name] = $value;
         }
     }
 

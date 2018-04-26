@@ -500,6 +500,9 @@ class Template
             '/\{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)\}/s' => function ($m) {
                 return '<?php echo ' . $m[1] . ';?>';
             },
+            '/\{\$([a-zA-Z_]+)\[([a-zA-Z_]+)\]\}/' => function ($m) {
+                return '{$' . $m[1] . '[\'' . $m[2] . '\']' . '}';
+            },
         ];
         $content = preg_replace_callback_array($rules, $content);
     }

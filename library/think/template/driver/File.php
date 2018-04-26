@@ -15,11 +15,9 @@ use think\Exception;
 
 class File
 {
-
+    protected $cacheFile;
     private $vars = null;
-
     private $config = null;
-
     private $engine = null;
 
     /**
@@ -56,22 +54,15 @@ class File
         $this->vars = $vars;
         $this->config = $config;
         $this->engine = $engine;
+        $this->cacheFile = $cacheFile;
 
         if (!empty($vars) && is_array($vars)) {
             // 模板阵列变量分解成为独立变量
-            if (isset($vars['cacheFile'])) {
-                $_think_cacheFile = $cacheFile;
-                $cacheFile        = $vars['cacheFile'];
-                unset($vars['cacheFile'], $vars['_think_cacheFile']);
-                extract($vars, EXTR_OVERWRITE);
-                include $_think_cacheFile;
-                return;
-            }
-            extract($vars);
+            extract($vars, EXTR_OVERWRITE);
         }
 
         //载入模版缓存文件
-        include $cacheFile;
+        include $this->cacheFile;
     }
 
     /**

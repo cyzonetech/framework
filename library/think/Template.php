@@ -401,6 +401,9 @@ class Template
         // 替换literal标签内容
         $this->parseLiteral($content);
 
+        // 解析TopCms兼容语法
+        $this->parseTopCms($content);
+
         // 检查include语法
         $this->parseInclude($content);
 
@@ -412,9 +415,6 @@ class Template
 
         // 替换包含文件中literal标签内容
         $this->parseLiteral($content);
-
-        // 解析TopCms兼容语法
-        $this->parseTopCms($content);
 
         // 检查PHP语法
         $this->parsePhp($content);
@@ -1303,8 +1303,8 @@ class Template
             }
 
             if ($this->config['view_base']) {
-                $module = isset($module) ? $module : Container::get('request')->module();
-                $path   = $this->config['view_base'] . ($module ? $module . DIRECTORY_SEPARATOR : '');
+                //$module = isset($module) ? $module : Container::get('request')->module();
+                $path   = $this->config['view_base'];
             } else {
                 $path = isset($module) ? Container::get('app')->getAppPath() . $module . DIRECTORY_SEPARATOR . basename($this->config['view_path']) . DIRECTORY_SEPARATOR : $this->config['view_path'];
             }

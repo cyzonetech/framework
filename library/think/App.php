@@ -210,7 +210,7 @@ class App implements \ArrayAccess
                 }
             }
         }
-        
+
         // 开启类名后缀
         $this->suffix = $this->config('app.class_suffix');
 
@@ -313,7 +313,10 @@ class App implements \ArrayAccess
             foreach ($files as $file) {
                 if ('.' . pathinfo($file, PATHINFO_EXTENSION) === $this->configExt) {
                     $filename = $dir . DIRECTORY_SEPARATOR . $file;
-                    $this->config->load($filename, pathinfo($file, PATHINFO_FILENAME));
+                    $this->config->load(
+                        $filename,
+                        str_replace(DIRECTORY_SEPARATOR, '/', $module) . pathinfo($file, PATHINFO_FILENAME)
+                    );
                 }
             }
         }

@@ -88,15 +88,20 @@ class Config implements \ArrayAccess
     protected function autoLoad($name)
     {
         // 如果尚未载入 则动态加载配置文件
-        $module = Container::get('request')->module();
+        if (false !== strpos($name, '/')) {
+            list($module, $newName) = explode('/', $name);
+        } else {
+            $module = Container::get('request')->module();
+            $newName = $name;
+        }
         $module = $module ? $module . DIRECTORY_SEPARATOR : '';
         $app    = Container::get('app');
         $path   = $app->getAppPath() . $module;
 
         if (is_dir($path . 'config')) {
-            $file = $path . 'config' . DIRECTORY_SEPARATOR . $name . $app->getConfigExt();
+            $file = $path . 'config' . DIRECTORY_SEPARATOR . $newName . $app->getConfigExt();
         } elseif (is_dir($app->getConfigPath() . $module)) {
-            $file = $app->getConfigPath() . $module . $name . $app->getConfigExt();
+            $file = $app->getConfigPath() . $module . $newName . $app->getConfigExt();
         }
 
         if (isset($file) && is_file($file)) {

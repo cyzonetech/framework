@@ -16,9 +16,9 @@ use think\Exception;
 class File
 {
     protected $cacheFile;
-    private $vars = null;
-    private $config = null;
-    private $engine = null;
+    private $vars;
+    private $config;
+    private $engine;
 
     /**
      * 写入编译缓存

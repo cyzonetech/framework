@@ -20,9 +20,11 @@ use think\db\exception\BindParamException;
 use think\Debug;
 use think\Exception;
 use think\exception\PDOException;
+use think\Factory;
 
 abstract class Connection
 {
+    use Factory;
     protected static $instance = [];
     /** @var PDOStatement PDO操作实例 */
     protected $PDOStatement;
@@ -189,7 +191,6 @@ abstract class Connection
                 throw new InvalidArgumentException('Undefined db type');
             }
 
-            $class = false !== strpos($options['type'], '\\') ? $options['type'] : '\\think\\db\\connector\\' . ucwords($options['type']);
             // 记录初始化信息
             Container::get('app')->log('[ DB ] INIT ' . $options['type']);
 
@@ -197,7 +198,7 @@ abstract class Connection
                 $name = md5(serialize($config));
             }
 
-            self::$instance[$name] = new $class($options);
+            self::$instance[$name] = self::instanceFactory($options['type'], $options, '\\think\\db\\connector\\');
         }
 
         return self::$instance[$name];
@@ -979,7 +980,7 @@ abstract class Connection
         }
 
         // 执行操作
-        $result = $this->execute($sql, $bind, $query);
+        $result = '' == $sql ? 0 : $this->execute($sql, $bind, $query);
 
         if ($result) {
             $sequence  = $sequence ?: (isset($options['sequence']) ? $options['sequence'] : null);
@@ -1141,8 +1142,12 @@ abstract class Connection
                 $options['where']['AND'] = $where;
                 $query->setOption('where', ['AND' => $where]);
             }
-        } elseif (!isset($key) && is_string($pk) && isset($options['where']['AND'][$pk])) {
-            $key = $this->getCacheKey($query, $options['where']['AND'][$pk]);
+        } elseif (!isset($key) && is_string($pk) && isset($options['where']['AND'])) {
+            foreach ($options['where']['AND'] as $val) {
+                if (is_array($val) && $val[0] == $pk) {
+                    $key = $this->getCacheKey($query, $val);
+                }
+            }
         }
 
         // 更新数据
@@ -1204,8 +1209,12 @@ abstract class Connection
             $key = $options['cache']['key'];
         } elseif (!is_null($data) && true !== $data && !is_array($data)) {
             $key = $this->getCacheKey($query, $data);
-        } elseif (is_string($pk) && isset($options['where']['AND'][$pk])) {
-            $key = $this->getCacheKey($query, $options['where']['AND'][$pk]);
+        } elseif (is_string($pk) && isset($options['where']['AND'])) {
+            foreach ($options['where']['AND'] as $val) {
+                if (is_array($val) && $val[0] == $pk) {
+                    $key = $this->getCacheKey($query, $val);
+                }
+            }
         }
 
         if (true !== $data && empty($options['where'])) {
@@ -1617,6 +1626,42 @@ abstract class Connection
             throw $e;
         }
     }
+
+    /**
+     * 启动XA事务
+     * @access public
+     * @param  string $xid XA事务id
+     * @return void
+     */
+    public function startTransXa($xid)
+    {}
+
+    /**
+     * 预编译XA事务
+     * @access public
+     * @param  string $xid XA事务id
+     * @return void
+     */
+    public function prepareXa($xid)
+    {}
+
+    /**
+     * 提交XA事务
+     * @access public
+     * @param  string $xid XA事务id
+     * @return void
+     */
+    public function commitXa($xid)
+    {}
+
+    /**
+     * 回滚XA事务
+     * @access public
+     * @param  string $xid XA事务id
+     * @return void
+     */
+    public function rollbackXa($xid)
+    {}
 
     /**
      * 启动事务

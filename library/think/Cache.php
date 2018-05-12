@@ -13,8 +13,17 @@ namespace think;
 
 use think\cache\Driver;
 
+/**
+ * Class Cache
+ *
+ * @package think
+ *
+ * @mixin Driver
+ * @mixin \think\cache\driver\File
+ */
 class Cache
 {
+    use Factory;
     /**
      * 缓存实例
      * @var array
@@ -47,14 +56,12 @@ class Cache
      */
     public function connect(array $options = [], $name = false)
     {
-        $type = !empty($options['type']) ? $options['type'] : 'File';
-
         if (false === $name) {
             $name = md5(serialize($options));
         }
 
         if (true === $name || !isset($this->instance[$name])) {
-            $class = false !== strpos($type, '\\') ? $type : '\\think\\cache\\driver\\' . ucwords($type);
+            $type = !empty($options['type']) ? $options['type'] : 'File';
 
             // 记录初始化信息
             $this->app->log('[ CACHE ] INIT ' . $type);
@@ -63,7 +70,7 @@ class Cache
                 $name = md5(serialize($options));
             }
 
-            $this->instance[$name] = new $class($options);
+            $this->instance[$name] = self::instanceFactory($type, $options, '\\think\\cache\\driver\\');
         }
 
         return $this->instance[$name];

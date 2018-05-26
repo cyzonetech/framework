@@ -419,6 +419,9 @@ class Template
         // 解析继承
         $this->parseExtend($content);
 
+        // 解析TopCms兼容语法
+        $this->parseTopCms($content);
+
         // 替换包含文件中literal标签内容
         $this->parseLiteral($content);
 

@@ -13,8 +13,6 @@ namespace think;
 
 class Config implements \ArrayAccess
 {
-    use Factory;
-
     /**
      * 配置参数
      * @var array
@@ -22,7 +20,7 @@ class Config implements \ArrayAccess
     private $config = [];
 
     /**
-     * 缓存前缀
+     * 配置前缀
      * @var string
      */
     private $prefix = 'app';
@@ -52,7 +50,7 @@ class Config implements \ArrayAccess
             $type = pathinfo($config, PATHINFO_EXTENSION);
         }
 
-        $object = self::instanceFactory($type, $config, '\\think\\config\\driver\\');
+        $object = Loader::factory($type, '\\think\\config\\driver\\', $config);
 
         return $this->set($object->parse(), $name);
     }
@@ -147,10 +145,11 @@ class Config implements \ArrayAccess
     /**
      * 获取配置参数 为空则获取所有配置
      * @access public
-     * @param  string    $name 配置参数名（支持多级配置 .号分割）
+     * @param  string    $name      配置参数名（支持多级配置 .号分割）
+     * @param  mixed     $default   默认值
      * @return mixed
      */
-    public function get($name = null)
+    public function get($name = null, $default = null)
     {
         // 无参数时获取所有
         if (empty($name)) {
@@ -177,7 +176,7 @@ class Config implements \ArrayAccess
             if (isset($config[$val])) {
                 $config = $config[$val];
             } else {
-                return;
+                return $default;
             }
         }
 

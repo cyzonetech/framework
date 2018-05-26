@@ -16,7 +16,11 @@ use think\response\Redirect;
 
 class Debug
 {
-    use Factory;
+    /**
+     * 配置参数
+     * @var array
+     */
+    protected $config = [];
 
     /**
      * 区间时间信息
@@ -36,9 +40,20 @@ class Debug
      */
     protected $app;
 
-    public function __construct(App $app)
+    public function __construct(App $app, array $config = [])
     {
-        $this->app = $app;
+        $this->app    = $app;
+        $this->config = $config;
+    }
+
+    public static function __make(App $app, Config $config)
+    {
+        return new static($app, $config->pull('trace'));
+    }
+
+    public function setConfig(array $config)
+    {
+        $this->config = array_merge($this->config, $config);
     }
 
     /**
@@ -222,7 +237,7 @@ class Debug
             $output = '<pre>' . $label . $output . '</pre>';
         }
         if ($echo) {
-            echo ($output);
+            echo($output);
             return;
         }
         return $output;
@@ -230,12 +245,12 @@ class Debug
 
     public function inject(Response $response, &$content)
     {
-        $config = $this->app['config']->pull('trace');
+        $config = $this->config;
         $type   = isset($config['type']) ? $config['type'] : 'Html';
 
         unset($config['type']);
 
-        $trace = self::instanceFactory($type, $config, '\\think\\debug\\');
+        $trace = Loader::factory($type, '\\think\\debug\\', $config);
 
         if ($response instanceof Redirect) {
             //TODO 记录

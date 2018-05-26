@@ -13,8 +13,6 @@ namespace think;
 
 class View
 {
-    use Factory;
-
     /**
      * 模板引擎实例
      * @var object
@@ -51,6 +49,11 @@ class View
         $this->engine($engine);
 
         return $this;
+    }
+
+    public static function __make(Config $config)
+    {
+        return (new static())->init($config->pull('template'));
     }
 
     /**
@@ -108,7 +111,7 @@ class View
             unset($options['type']);
         }
 
-        $this->engine = self::instanceFactory($type, $options, '\\think\\view\\driver\\');
+        $this->engine = Loader::factory($type, '\\think\\view\\driver\\', $options);
 
         return $this;
     }

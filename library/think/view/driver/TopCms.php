@@ -11,7 +11,7 @@
 
 namespace think\view\driver;
 
-use think\Container;
+use think\App;
 use think\exception\TemplateNotFoundException;
 use think\Loader;
 use think\Template;
@@ -20,8 +20,14 @@ class TopCms
 {
     // 模板引擎实例
     private $template;
+
+    // 系统应用参数
+    private $app;
+
     // 模板引擎参数
     protected $config = [
+        // 默认模板渲染规则 1 解析为小写+下划线 2 全部转换小写
+        'auto_rule'   => 1,
         // 视图基础目录（集中式）
         'view_base' => '',
         // 模板起始路径
@@ -34,14 +40,15 @@ class TopCms
         'tpl_cache' => true,
     ];
 
-    public function __construct($config = [])
+    public function __construct(App $app, $config = [])
     {
+        $this->app = $app;
         $this->config = array_merge($this->config, (array)$config);
         if (empty($this->config['view_path'])) {
-            $this->config['view_path'] = Container::get('app')->getModulePath() . 'view' . DIRECTORY_SEPARATOR;
+            $this->config['view_path'] = $app->getModulePath() . 'view' . DIRECTORY_SEPARATOR;
         }
 
-        $this->template = new Template($this->config);
+        $this->template = new Template($app, $this->config);
     }
 
     /**
@@ -84,8 +91,7 @@ class TopCms
         }
 
         // 记录视图信息
-        Container::get('app')
-            ->log('[ VIEW ] ' . $template . ' [ ' . var_export(array_keys($data), true) . ' ]');
+        $this->app->log('[ VIEW ] ' . $template . ' [ ' . var_export(array_keys($data), true) . ' ]');
 
         $this->template->fetch($template, $data, $config);
     }
@@ -112,7 +118,7 @@ class TopCms
     private function parseTemplate($template)
     {
         // 分析模板文件规则
-        $request = Container::get('request');
+        $request = $this->app['request'];
 
         // 获取视图根目录
         if (strpos($template, '@')) {
@@ -125,7 +131,7 @@ class TopCms
             $template = '/' . ltrim($template, '/');
             $path = $this->config['view_base'];
         } else {
-            $path = isset($module) ? Container::get('app')->getAppPath() . $module . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : $this->config['view_path'];
+            $path = isset($module) ? $this->app->getAppPath() . $module . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR : $this->config['view_path'];
         }
 
         $depr = $this->config['view_depr'];
@@ -137,7 +143,7 @@ class TopCms
                 $controller = preg_replace('/^admin[\.\/]/', '', $controller);
                 if ('' == $template) {
                     // 如果模板文件名为空 按照默认规则定位
-                    $template = str_replace('.', DIRECTORY_SEPARATOR, $controller) . $depr . $request->action();
+                    $template = str_replace('.', DIRECTORY_SEPARATOR, $controller) . $depr . $this->getActionTemplate($request);
                 } elseif (false === strpos($template, $depr)) {
                     $template = str_replace('.', DIRECTORY_SEPARATOR, $controller) . $depr . $template;
                 }
@@ -147,6 +153,18 @@ class TopCms
         }
 
         return $path . ltrim($template, '/') . '.' . ltrim($this->config['view_suffix'], '.');
+    }
+
+    /**
+     * @param $request
+     * @return mixed
+     */
+    protected function getActionTemplate($request)
+    {
+        $rule = [$request->action(true), Loader::parseName($request->action(true)), $request->action()];
+        $type = $this->config['auto_rule'];
+
+        return isset($rule[$type]) ? $rule[$type] : $rule[0];
     }
 
     /**

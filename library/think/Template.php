@@ -485,44 +485,20 @@ class Template
         }
     }
 
+    /**
+     * 解析模板中的TopCms标签
+     * @access private
+     * @param  string $content 要解析的模板内容
+     * @return void
+     */
     private function parseTopCms(&$content)
     {
-        $rules = [
-            '/([\n\r]+)\t+/s' => function ($m) {
-                return $m[1];
-            },
-            '/\<\!\-\-#.+?#\-\-\>/s' => function () {
-                return '';
-            },
-            '/\<\!\-\-\{(.+?)\}\-\-\>/s' => function ($m) {
-                return '{' . $m[1] . '}';
-            },
-            '/\{template\s+(["\'])([a-z]+)\\1\s?,\s?+(["\'])(.+)\\3\}/i' => function ($m) {
-                return '{include file="' . $m[2] . '/' . $m[4] . '" /}';
-            },
-            '/\{pc:block pos=(["\'])(.+)\\1\}\{\/pc\}/' => function ($m) {
-                //{section name="special_type_left_1_$contentid" type="html"}{/section}
-                return '{section name="' . $m[2] . '"}{/section}';
-            },
-            '/\{loop\s+(\S+)\s+(\S+)\}/' => function ($m) {
-                return '<?php if(is_array(' . $m[1] . ')): $i=0; $imax=count(' . $m[1] . '); foreach(' . $m[1] . ' AS ' . $m[2] . '): ?>';
-            },
-            '/\{loop\s+(\S+)\s+(\S+)\s+(\S+)\}/' => function ($m) {
-                return '<?php if(is_array(' . $m[1] . ')): $i=0; $imax=count(' . $m[1] . '); foreach(' . $m[1] . ' AS ' . $m[2] . ' => ' . $m[3] . '): ?>';
-            },
-            '/\{\/loop\}/' => function () {
-                return '<?php $i++; endforeach; endif; ?>';
-            },
-            '/\{([A-Z_\x7f-\xff][A-Z0-9_\x7f-\xff]*)\}/s' => function ($m) {
-                return '<?php echo ' . $m[1] . ';?>';
-            },
-            '/\{\$([a-zA-Z_]+)\[([a-zA-Z_]+)\]\}/' => function ($m) {
-                return '{$' . $m[1] . '[\'' . $m[2] . '\']' . '}';
-            },
-        ];
-        $content = preg_replace_callback_array($rules, $content);
+        $className = 'app\\common\\lib\\TopCmsTemplate';
+        if (class_exists($className)) {
+            $template = new $className;
+            $content = $template->parse($content);
+        }
     }
-
 
     /**
      * 解析模板中的布局标签

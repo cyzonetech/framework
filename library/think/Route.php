@@ -28,11 +28,11 @@ class Route
     protected $rest = [
         'index'  => ['get', '', 'index'],
         'create' => ['get', '/create', 'create'],
-        'edit'   => ['get', '/:id/edit', 'edit'],
-        'read'   => ['get', '/:id', 'read'],
+        'edit'   => ['get', '/<id>/edit', 'edit'],
+        'read'   => ['get', '/<id>', 'read'],
         'save'   => ['post', '', 'save'],
-        'update' => ['put', '/:id', 'update'],
-        'delete' => ['delete', '/:id', 'delete'],
+        'update' => ['put', '/<id>', 'update'],
+        'delete' => ['delete', '/<id>', 'delete'],
     ];
 
     /**
@@ -142,6 +142,17 @@ class Route
         }
 
         return isset($this->config[$name]) ? $this->config[$name] : null;
+    }
+
+    /**
+     * 配置
+     * @access public
+     * @param  array $config
+     * @return void
+     */
+    public function setConfig(array $config = [])
+    {
+        $this->config = array_merge($this->config, array_change_key_case($config));
     }
 
     public static function __make(App $app, Config $config)

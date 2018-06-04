@@ -280,7 +280,7 @@ class Request
      * 是否合并Param
      * @var bool
      */
-    protected $mergeParam;
+    protected $mergeParam = false;
 
     /**
      * 架构函数
@@ -448,7 +448,7 @@ class Request
     /**
      * 设置或获取当前包含协议的域名
      * @access public
-     * @param  string|bool $domain 域名
+     * @param  string|true $domain 域名
      * @return string|$this
      */
     public function domain($domain = null)
@@ -539,7 +539,7 @@ class Request
             return $this;
         } elseif (!$this->url) {
             if ($this->isCli()) {
-                $this->url = $this->server('argv')[1] ?: '';
+                $this->url = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
             } elseif ($this->server('HTTP_X_REWRITE_URL')) {
                 $this->url = $this->server('HTTP_X_REWRITE_URL');
             } elseif ($this->server('REQUEST_URI')) {
@@ -557,7 +557,7 @@ class Request
     /**
      * 设置或获取当前URL 不含QUERY_STRING
      * @access public
-     * @param  string $url URL地址
+     * @param  string|true $url URL地址
      * @return string|$this
      */
     public function baseUrl($url = null)
@@ -576,7 +576,7 @@ class Request
     /**
      * 设置或获取当前执行的文件 SCRIPT_NAME
      * @access public
-     * @param  string $file 当前执行的文件
+     * @param  string|true $file 当前执行的文件
      * @return string|$this
      */
     public function baseFile($file = null)
@@ -609,7 +609,7 @@ class Request
     /**
      * 设置或获取URL访问根地址
      * @access public
-     * @param  string $url URL地址
+     * @param  string|true $url URL地址
      * @return string|$this
      */
     public function root($url = null)
@@ -659,7 +659,7 @@ class Request
                 unset($_GET[$this->config['var_pathinfo']]);
             } elseif ($this->isCli()) {
                 // CLI模式下 index.php module/controller/action/params/...
-                $pathinfo = isset($this->server('argv')[1]) ? $this->server('argv')[1] : '';
+                $pathinfo = isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : '';
             } elseif ('cli-server' == PHP_SAPI) {
                 $pathinfo = strpos($this->server('REQUEST_URI'), '?') ? strstr($this->server('REQUEST_URI'), '?', true) : $this->server('REQUEST_URI');
             } elseif ($this->server('PATH_INFO')) {
@@ -959,6 +959,7 @@ class Request
         }
 
         if (is_array($name)) {
+            $this->mergeParam = false;
             return $this->get = array_merge($this->get, $name);
         }
 
@@ -985,6 +986,7 @@ class Request
         }
 
         if (is_array($name)) {
+            $this->mergeParam  = false;
             return $this->post = array_merge($this->post, $name);
         }
 
@@ -1011,6 +1013,7 @@ class Request
         }
 
         if (is_array($name)) {
+            $this->mergeParam = false;
             return $this->put = is_null($this->put) ? $name : array_merge($this->put, $name);
         }
 
@@ -1238,7 +1241,7 @@ class Request
             if (function_exists('apache_request_headers') && $result = apache_request_headers()) {
                 $header = $result;
             } else {
-                $server = $this->server ?: $_SERVER;
+                $server = $this->server;
                 foreach ($server as $key => $val) {
                     if (0 === strpos($key, 'HTTP_')) {
                         $key          = str_replace('_', '-', strtolower(substr($key, 5)));
@@ -1989,4 +1992,14 @@ class Request
         return $this->param($name);
     }
 
+    /**
+     * 检测请求数据的值
+     * @access public
+     * @param  string $name 名称
+     * @return boolean
+     */
+    public function __isset($name)
+    {
+        return isset($this->param[$name]);
+    }
 }

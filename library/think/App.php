@@ -20,7 +20,7 @@ use think\route\Dispatch;
  */
 class App extends Container
 {
-    const VERSION = '5.1.15';
+    const VERSION = '5.1.16';
 
     /**
      * 当前模块路径
@@ -363,6 +363,7 @@ class App extends Container
         }
 
         Db::init($config['database']);
+        $this->middleware->setConfig($config['middleware']);
         $this->route->setConfig($config['app']);
         $this->request->init($config['app']);
         $this->cookie->init($config['cookie']);
@@ -499,7 +500,7 @@ class App extends Container
             $this->lang->detect();
         }
 
-        $this->request->langset($this->lang->range());
+        $this->request->setLangset($this->lang->range());
 
         // 加载系统语言包
         $this->lang->load([

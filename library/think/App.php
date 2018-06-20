@@ -20,7 +20,7 @@ use think\route\Dispatch;
  */
 class App extends Container
 {
-    const VERSION = '5.1.16';
+    const VERSION = '5.1.17';
 
     /**
      * 当前模块路径
@@ -336,10 +336,7 @@ class App extends Container
             foreach ($files as $file) {
                 if ('.' . pathinfo($file, PATHINFO_EXTENSION) === $this->configExt) {
                     $filename = $dir . DIRECTORY_SEPARATOR . $file;
-                    $this->config->load(
-                        $filename,
-                        str_replace(DIRECTORY_SEPARATOR, '/', $module) . pathinfo($file, PATHINFO_FILENAME)
-                    );
+                    $this->config->load($filename, str_replace(DIRECTORY_SEPARATOR, '/', $module) . pathinfo($file, PATHINFO_FILENAME));
                 }
             }
         }
@@ -350,7 +347,6 @@ class App extends Container
             // 对容器中的对象实例进行配置更新
             $this->containerConfigUpdate($module);
         }
-
     }
 
     protected function containerConfigUpdate($module)
@@ -444,30 +440,7 @@ class App extends Container
         }
 
         $this->middleware->add(function (Request $request, $next) use ($dispatch, $data) {
-            if (is_null($data)) {
-                try {
-                    // 执行调度
-                    $data = $dispatch->run();
-                } catch (HttpResponseException $exception) {
-                    $data = $exception->getResponse();
-                }
-            }
-
-            // 输出数据到客户端
-            if ($data instanceof Response) {
-                $response = $data;
-            } elseif (!is_null($data)) {
-                // 默认自动识别响应输出类型
-                $isAjax = $request->isAjax();
-                $type   = $isAjax && is_array($data) ? $this->config('app.default_ajax_return') : $this->config('app.default_return_type');
-
-                $response = Response::create($data, $type);
-            } else {
-                $data     = ob_get_clean();
-                $status   = empty($data) ? 204 : 200;
-                $response = Response::create($data, '', $status);
-            }
-            return $response;
+            return is_null($data) ? $dispatch->run() : $data;
         });
 
         $response = $this->middleware->dispatch($this->request);

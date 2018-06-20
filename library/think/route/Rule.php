@@ -172,6 +172,16 @@ abstract class Rule
     }
 
     /**
+     * 获取路由所在域名
+     * @access public
+     * @return string
+     */
+    public function getDomain()
+    {
+        return $this->parent->getDomain();
+    }
+
+    /**
      * 获取变量规则定义
      * @access public
      * @param  string  $name 变量名
@@ -338,6 +348,24 @@ abstract class Rule
     public function domain($domain)
     {
         return $this->option('domain', $domain);
+    }
+
+    /**
+     * 设置参数过滤检查
+     * @access public
+     * @param  string|array     $name
+     * @param  mixed            $value
+     * @return $this
+     */
+    public function filter($name, $value = null)
+    {
+        if (is_array($name)) {
+            $this->option['filter'] = $name;
+        } else {
+            $this->option['filter'][$name] = $value;
+        }
+
+        return $this;
     }
 
     /**
@@ -791,9 +819,9 @@ abstract class Rule
 
         $result = new ControllerDispatch($request, $this, implode('/', $route), $var);
 
-        $request->action(array_pop($route));
-        $request->controller($route ? array_pop($route) : $this->getConfig('default_controller'));
-        $request->module($route ? array_pop($route) : $this->getConfig('default_module'));
+        $request->setAction(array_pop($route));
+        $request->setController($route ? array_pop($route) : $this->getConfig('default_controller'));
+        $request->setModule($route ? array_pop($route) : $this->getConfig('default_module'));
 
         return $result;
     }
@@ -821,7 +849,7 @@ abstract class Rule
         }
 
         // 设置当前请求的路由变量
-        $request->route($var);
+        $request->setRouteVars($var);
 
         // 路由到模块/控制器/操作
         return new ModuleDispatch($request, $this, [$module, $controller, $action], ['convert' => false]);
@@ -870,6 +898,14 @@ abstract class Rule
             return false;
         }
 
+        // 请求参数检查
+        if (isset($option['filter'])) {
+            foreach ($option['filter'] as $name => $value) {
+                if ($request->param($name, '', null) != $value) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 

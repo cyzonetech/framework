@@ -221,9 +221,13 @@ class Config implements \ArrayAccess
         } elseif (is_array($name)) {
             // 批量设置
             if (!empty($value)) {
+                if (strpos($value, '/')) {
+                    list($module, $value) = explode('/', $value);
+                }
                 if (isset($this->config[$value])) {
                     $result = array_merge($this->config[$value], $name);
                 } else {
+                    $value = isset($module) ? $module . '/' . $value : $value;
                     $result = $name;
                 }
 

@@ -1380,4 +1380,12 @@ class Template
 
         return '/' . $regex . '/is';
     }
+
+    public function __debugInfo()
+    {
+        $data = get_object_vars($this);
+        unset($data['app'], $data['storege']);
+
+        return $data;
+    }
 }

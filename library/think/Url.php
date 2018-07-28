@@ -408,4 +408,12 @@ class Url
         $this->root = $root;
         $this->app['request']->setRoot($root);
     }
+
+    public function __debugInfo()
+    {
+        $data = get_object_vars($this);
+        unset($data['app']);
+
+        return $data;
+    }
 }

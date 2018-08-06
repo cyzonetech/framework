@@ -20,7 +20,7 @@ use think\route\Dispatch;
  */
 class App extends Container
 {
-    const VERSION = '5.1.17';
+    const VERSION = '5.1.21';
 
     /**
      * 当前模块路径
@@ -178,6 +178,8 @@ class App extends Container
 
         $this->instance('app', $this);
 
+        $this->configExt = $this->env->get('config_ext', '.php');
+
         // 加载惯例配置文件
         $this->config->set(include $this->thinkPath . 'convention.php');
 
@@ -203,8 +205,6 @@ class App extends Container
 
         // 注册应用命名空间
         Loader::addNamespace($this->namespace, $this->appPath);
-
-        $this->configExt = $this->env->get('config_ext', '.php');
 
         // 初始化应用
         $this->init();
@@ -254,8 +254,8 @@ class App extends Container
         // 读取语言包
         $this->loadLangPack();
 
-        // 监听app_init
-        $this->hook->listen('app_init');
+        // 路由初始化
+        $this->routeInit();
     }
 
     /**
@@ -286,7 +286,7 @@ class App extends Container
 
             // 加载公共文件
             if (is_file($path . 'common.php')) {
-                include $path . 'common.php';
+                include_once $path . 'common.php';
             }
 
             if ('' == $module) {
@@ -321,8 +321,7 @@ class App extends Container
 
             foreach ($files as $file) {
                 if ('.' . pathinfo($file, PATHINFO_EXTENSION) === $this->configExt) {
-                    $filename = $dir . DIRECTORY_SEPARATOR . $file;
-                    $this->config->load($filename, pathinfo($file, PATHINFO_FILENAME));
+                    $this->config->load($dir . $file, pathinfo($file, PATHINFO_FILENAME));
                 }
             }
         }
@@ -377,6 +376,9 @@ class App extends Container
         try {
             // 初始化应用
             $this->initialize();
+
+            // 监听app_init
+            $this->hook->listen('app_init');
 
             if ($this->bindModule) {
                 // 模块/控制器绑定
@@ -532,6 +534,41 @@ class App extends Container
     }
 
     /**
+     * 路由初始化 导入路由定义规则
+     * @access public
+     * @return void
+     */
+    public function routeInit()
+    {
+        // 路由检测
+        $files = scandir($this->routePath);
+        foreach ($files as $file) {
+            if (strpos($file, '.php')) {
+                $filename = $this->routePath . $file;
+                // 导入路由配置
+                $rules = include $filename;
+                if (is_array($rules)) {
+                    $this->route->import($rules);
+                }
+            }
+        }
+
+        if ($this->route->config('route_annotation')) {
+            // 自动生成路由定义
+            if ($this->appDebug) {
+                $suffix = $this->route->config('controller_suffix') || $this->route->config('class_suffix');
+                $this->build->buildRoute($suffix);
+            }
+
+            $filename = $this->runtimePath . 'build_route.php';
+
+            if (is_file($filename)) {
+                include $filename;
+            }
+        }
+    }
+
+    /**
      * URL路由检测（根据PATH_INFO)
      * @access public
      * @return Dispatch
@@ -550,32 +587,6 @@ class App extends Container
 
         // 获取应用调度信息
         $path = $this->request->path();
-
-        // 路由检测
-        $files = scandir($this->routePath);
-        foreach ($files as $file) {
-            if (strpos($file, '.php')) {
-                $filename = $this->routePath . $file;
-                // 导入路由配置
-                $rules = include $filename;
-                if (is_array($rules)) {
-                    $this->route->import($rules);
-                }
-            }
-        }
-
-        if ($this->config('route.route_annotation')) {
-            // 自动生成路由定义
-            if ($this->appDebug) {
-                $this->build->buildRoute($this->config('route.controller_suffix'));
-            }
-
-            $filename = $this->runtimePath . 'build_route.php';
-
-            if (is_file($filename)) {
-                include $filename;
-            }
-        }
 
         // 是否强制路由模式
         $must = !is_null($this->routeMust) ? $this->routeMust : $this->route->config('url_route_must');

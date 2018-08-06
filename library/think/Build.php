@@ -232,12 +232,12 @@ class Build
         foreach ($controllers as $controller) {
             $controller = basename($controller, '.php');
 
+            $class = new \ReflectionClass($namespace . '\\' . $module . '\\' . $layer . '\\' . $controller);
+
             if ($suffix) {
                 // 控制器后缀
                 $controller = substr($controller, 0, -10);
             }
-
-            $class = new \ReflectionClass($namespace . '\\' . $module . '\\' . $layer . '\\' . $controller);
 
             if (strpos($layer, '\\')) {
                 // 多级控制器
@@ -273,7 +273,7 @@ class Build
         if (false !== strpos($comment, '@route(')) {
             $comment = $this->parseRouteComment($comment);
             $route   = $module . '/' . $controller;
-            $comment = preg_replace('/route\(\s?([\'\"][\-\_\/\:\<\>\?\$\[\]\w]+[\'\"])\s?\)/is', 'Route::resourece(\1,\'' . $route . '\')', $comment);
+            $comment = preg_replace('/route\(\s?([\'\"][\-\_\/\:\<\>\?\$\[\]\w]+[\'\"])\s?\)/is', 'Route::resource(\1,\'' . $route . '\')', $comment);
             $content .= PHP_EOL . $comment;
         } elseif (false !== strpos($comment, '@alias(')) {
             $comment = $this->parseRouteComment($comment, '@alias(');

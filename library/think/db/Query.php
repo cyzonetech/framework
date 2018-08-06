@@ -1489,6 +1489,11 @@ class Query
 
         $logic = strtoupper($logic);
 
+        if ($field instanceof Where) {
+            $this->options['where'][$logic] = $field->parse();
+            return $this;
+        }
+
         if (is_string($field) && !empty($this->options['via']) && !strpos($field, '.')) {
             $field = $this->options['via'] . '.' . $field;
         }
@@ -2215,6 +2220,31 @@ class Query
     }
 
     /**
+     * 使用搜索器条件搜索字段
+     * @access public
+     * @param  array $fields 搜索字段
+     * @param  array $data   搜索数据
+     * @return $this
+     */
+    public function withSearch(array $fields, array $data = [])
+    {
+        foreach ($fields as $key => $field) {
+            if ($field instanceof \Closure) {
+                $field($this, isset($data[$key]) ? $data[$key] : null, $data);
+            } elseif ($this->model) {
+                // 检测搜索器
+                $method = 'search' . Loader::parseName($field, 1) . 'Attr';
+
+                if (method_exists($this->model, $method)) {
+                    $this->model->$method($this, isset($data[$field]) ? $data[$field] : null, $data);
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * 指定数据表主键
      * @access public
      * @param  string $pk 主键
@@ -2436,20 +2466,15 @@ class Query
         /** @var Model $class */
         $class = $this->model;
         foreach ($with as $key => $relation) {
-            $subRelation = '';
-            $closure     = false;
+            $closure = false;
 
             if ($relation instanceof \Closure) {
                 // 支持闭包查询过滤关联条件
-                $closure    = $relation;
-                $relation   = $key;
-                $with[$key] = $key;
+                $closure  = $relation;
+                $relation = $key;
             } elseif (is_array($relation)) {
-                $subRelation = $relation;
-                $relation    = $key;
+                $relation = $key;
             } elseif (is_string($relation) && strpos($relation, '.')) {
-                $with[$key] = $relation;
-
                 list($relation, $subRelation) = explode('.', $relation, 2);
             }
 
@@ -2458,19 +2483,73 @@ class Query
             $model    = $class->$relation();
 
             if ($model instanceof OneToOne && 0 == $model->getEagerlyType()) {
-                $model->removeOption()->eagerly($this, $relation, $subRelation, $closure, $first);
+                $table = $model->getTable();
+                $model->removeOption()
+                    ->table($table)
+                    ->eagerly($this, $relation, true, '', $closure, $first);
                 $first = false;
-            } elseif ($closure) {
-                $with[$key] = $closure;
             }
         }
+
         $this->via();
 
-        if (isset($this->options['with'])) {
-            $this->options['with'] = array_merge($this->options['with'], $with);
-        } else {
-            $this->options['with'] = $with;
+        $this->options['with'] = $with;
+
+        return $this;
+    }
+
+    /**
+     * 关联预载入 JOIN方式（不支持嵌套）
+     * @access protected
+     * @param  string|array $with 关联方法名
+     * @param  string       $joinType JOIN方式
+     * @return $this
+     */
+    public function withJoin($with, $joinType = '')
+    {
+        if (empty($with)) {
+            return $this;
         }
+
+        if (is_string($with)) {
+            $with = explode(',', $with);
+        }
+
+        $first = true;
+
+        /** @var Model $class */
+        $class = $this->model;
+        foreach ($with as $key => $relation) {
+            $closure = null;
+            $field   = true;
+
+            if ($relation instanceof \Closure) {
+                // 支持闭包查询过滤关联条件
+                $closure  = $relation;
+                $relation = $key;
+            } elseif (is_array($relation)) {
+                $field    = $relation;
+                $relation = $key;
+            } elseif (is_string($relation) && strpos($relation, '.')) {
+                list($relation, $subRelation) = explode('.', $relation, 2);
+            }
+
+            /** @var Relation $model */
+            $relation = Loader::parseName($relation, 1, false);
+            $model    = $class->$relation();
+
+            if ($model instanceof OneToOne) {
+                $model->eagerly($this, $relation, $field, $joinType, $closure, $first);
+                $first = false;
+            } else {
+                // 不支持其它关联
+                unset($with[$key]);
+            }
+        }
+
+        $this->via();
+
+        $this->options['with_join'] = $with;
 
         return $this;
     }
@@ -2861,6 +2940,11 @@ class Query
                     $result->eagerlyResultSet($resultSet, $this->options['with'], $withRelationAttr);
                 }
 
+                if (!empty($this->options['with_join'])) {
+                    // JOIN预载入
+                    $result->eagerlyResultSet($resultSet, $this->options['with_join'], $withRelationAttr, true);
+                }
+
                 // 模型数据集转换
                 $resultSet = $result->toCollection($resultSet);
             } else {
@@ -3130,8 +3214,7 @@ class Query
             $this->jsonResult($result, $options['json'], $options['json_assoc'], $withRelationAttr);
         }
 
-        $condition = (!$resultSet && isset($options['where']['AND'])) ? $options['where']['AND'] : null;
-        $result    = $this->model->newInstance($result, $condition);
+        $result = $this->model->newInstance($result, $resultSet ? null : $this->getModelUpdateCondition($options));
 
         // 动态获取器
         if (!empty($options['with_attr'])) {
@@ -3148,12 +3231,27 @@ class Query
             $result->eagerlyResult($result, $options['with'], $withRelationAttr);
         }
 
+        // JOIN预载入查询
+        if (!$resultSet && !empty($options['with_join'])) {
+            $result->eagerlyResult($result, $options['with_join'], $withRelationAttr, true);
+        }
+
         // 关联统计
         if (!empty($options['with_count'])) {
             foreach ($options['with_count'] as $val) {
                 $result->relationCount($result, $val[0], $val[1], $val[2]);
             }
         }
+    }
+
+    /**
+     * 获取模型的更新条件
+     * @access protected
+     * @param  array $options 查询参数
+     */
+    protected function getModelUpdateCondition(array $options)
+    {
+        return isset($options['where']['AND']) ? $options['where']['AND'] : null;
     }
 
     /**

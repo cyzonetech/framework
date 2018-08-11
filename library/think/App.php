@@ -20,7 +20,7 @@ use think\route\Dispatch;
  */
 class App extends Container
 {
-    const VERSION = '5.1.21';
+    const VERSION = '5.1.22';
 
     /**
      * 当前模块路径
@@ -326,9 +326,9 @@ class App extends Container
 
             // 自动读取配置文件
             if (is_dir($path . 'config')) {
-                $dir = $path . 'config';
+                $dir = $path . 'config' . DIRECTORY_SEPARATOR;
             } elseif (is_dir($this->configPath . $module)) {
-                $dir = $this->configPath . $module;
+                $dir = $this->configPath . $module . DIRECTORY_SEPARATOR;
             }
 
             $files = isset($dir) ? scandir($dir) : [];

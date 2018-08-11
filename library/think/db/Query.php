@@ -1034,17 +1034,6 @@ class Query
     }
 
     /**
-     * 设置数据排除字段
-     * @access public
-     * @param  mixed $field 字段名或者数据
-     * @return $this
-     */
-    public function hidden($field)
-    {
-        return $this->field($field, true);
-    }
-
-    /**
      * 设置数据
      * @access public
      * @param  mixed $field 字段名或者数据
@@ -2124,6 +2113,46 @@ class Query
     }
 
     /**
+     * 设置需要隐藏的输出属性
+     * @access public
+     * @param  mixed $hidden 需要隐藏的字段名
+     * @return $this
+     */
+    public function hidden($hidden)
+    {
+        if ($this->model) {
+            $this->options['hidden'] = $hidden;
+            return $this;
+        }
+
+        return $this->field($hidden, true);
+    }
+
+    /**
+     * 设置需要输出的属性
+     * @access public
+     * @param  array $visible 需要输出的属性
+     * @return $this
+     */
+    public function visible(array $visible)
+    {
+        $this->options['visible'] = $visible;
+        return $this;
+    }
+
+    /**
+     * 设置需要追加输出的属性
+     * @access public
+     * @param  array $append 需要追加的属性
+     * @return $this
+     */
+    public function append(array $append)
+    {
+        $this->options['append'] = $append;
+        return $this;
+    }
+
+    /**
      * 设置数据字段获取器
      * @access public
      * @param  string|array $name       字段名
@@ -2133,14 +2162,8 @@ class Query
     public function withAttr($name, $callback = null)
     {
         if (is_array($name)) {
-            foreach ($name as $key => $val) {
-                $key = Loader::parseName($key);
-
-                $this->options['with_attr'][$key] = $val;
-            }
+            $this->options['with_attr'] = $name;
         } else {
-            $name = Loader::parseName($name);
-
             $this->options['with_attr'][$name] = $callback;
         }
 
@@ -2466,7 +2489,7 @@ class Query
         /** @var Model $class */
         $class = $this->model;
         foreach ($with as $key => $relation) {
-            $closure = false;
+            $closure = null;
 
             if ($relation instanceof \Closure) {
                 // 支持闭包查询过滤关联条件
@@ -2575,7 +2598,7 @@ class Query
             }
 
             foreach ($relations as $key => $relation) {
-                $closure = false;
+                $closure = null;
                 if ($relation instanceof \Closure) {
                     $closure  = $relation;
                     $relation = $key;
@@ -3148,6 +3171,8 @@ class Query
     protected function getResultAttr(&$result, $withAttr = [])
     {
         foreach ($withAttr as $name => $closure) {
+            $name = Loader::parseName($name);
+
             if (strpos($name, '.')) {
                 // 支持JSON字段 获取器定义
                 list($key, $field) = explode('.', $name);
@@ -3218,7 +3243,18 @@ class Query
 
         // 动态获取器
         if (!empty($options['with_attr'])) {
-            $result->setModelAttrs($options['with_attr']);
+            $result->withAttribute($options['with_attr']);
+        }
+
+        // 输出属性控制
+        if (!empty($options['visible'])) {
+            $result->visible($options['visible']);
+        } elseif (!empty($options['hidden'])) {
+            $result->hidden($options['hidden']);
+        }
+
+        if (!empty($options['append'])) {
+            $result->append($options['append']);
         }
 
         // 关联查询

@@ -1283,6 +1283,7 @@ class Template
      */
     private function parseTemplateFile($template)
     {
+        $template = str_replace('__TPL_PATH__', TPL_PATH, $template);
         if ('' == pathinfo($template, PATHINFO_EXTENSION)) {
             if (strpos($template, '@')) {
                 list($module, $template) = explode('@', $template);

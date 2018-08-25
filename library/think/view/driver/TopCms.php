@@ -77,9 +77,6 @@ class TopCms
      */
     public function fetch($template, $data = [], $config = [])
     {
-        //处理模板后缀
-        $template = preg_replace('/\.html$/i', '', $template);
-
         if ('' == pathinfo($template, PATHINFO_EXTENSION)) {
             // 获取模板文件名
             $template = $this->parseTemplate($template);

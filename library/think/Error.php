@@ -128,16 +128,17 @@ class Error
     {
         static $handle;
 
-        if (!$handle) {
-            // 异常处理handle
-            $class = self::$exceptionHandler;
+        if (!$handle || !is_a($handle, self::$exceptionHandler,true)) {
+                // 异常处理handle
+                $class = self::$exceptionHandler;
 
-            if ($class && is_string($class) && class_exists($class) && is_subclass_of($class, "\\think\\exception\\Handle")) {
-                $handle = new $class;
-            } else {
-                $handle = new Handle;
-                if ($class instanceof \Closure) {
-                    $handle->setRender($class);
+                if ($class && is_string($class) && class_exists($class) && is_subclass_of($class, "\\think\\exception\\Handle")) {
+                    $handle = new $class;
+                } else {
+                    $handle = new Handle;
+                    if ($class instanceof \Closure) {
+                        $handle->setRender($class);
+                    }
                 }
             }
         }

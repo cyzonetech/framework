@@ -1754,6 +1754,9 @@ class Query
             $results = $this->page($page, $listRows)->select();
         }
 
+        $this->removeOption('limit');
+        $this->removeOption('page');
+
         return $class::make($results, $listRows, $page, $total, $simple, $config);
     }
 
@@ -2287,7 +2290,8 @@ class Query
                 $field($this, isset($data[$key]) ? $data[$key] : null, $data, $prefix);
             } elseif ($this->model) {
                 // 检测搜索器
-                $method = 'search' . Loader::parseName($field, 1) . 'Attr';
+                $fieldName = is_numeric($key) ? $field : $key;
+                $method    = 'search' . Loader::parseName($fieldName, 1) . 'Attr';
 
                 if (method_exists($this->model, $method)) {
                     $this->model->$method($this, isset($data[$field]) ? $data[$field] : null, $data, $prefix);
@@ -3089,8 +3093,6 @@ class Query
         if ($this->options['fetch_sql']) {
             return $result;
         }
-
-        $this->removeOption('limit');
 
         // 数据处理
         if (empty($result)) {

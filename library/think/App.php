@@ -197,7 +197,9 @@ class App extends Container
         ]);
 
         // 加载环境变量配置文件
-        if (is_file($this->rootPath . '.env')) {
+        if (is_file(PUBLIC_PATH . '.env')) {
+            $this->env->load(PUBLIC_PATH . '.env');
+        } elseif (is_file($this->rootPath . '.env')) {
             $this->env->load($this->rootPath . '.env');
         }
 

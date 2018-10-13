@@ -230,6 +230,7 @@ class File extends SplFileObject
         if ((isset($rule['size']) && !$this->checkSize($rule['size']))
             || (isset($rule['type']) && !$this->checkMime($rule['type']))
             || (isset($rule['ext']) && !$this->checkExt($rule['ext']))
+            || (isset($rule['deny'])) && !$this->checkDeny($rule['deny'])
             || !$this->checkImg()) {
             return false;
         }
@@ -252,6 +253,28 @@ class File extends SplFileObject
         $extension = strtolower(pathinfo($this->getInfo('name'), PATHINFO_EXTENSION));
 
         if (!in_array($extension, $ext)) {
+            $this->error = 'extensions to upload is not allowed';
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * 检测禁止上传文件后缀
+     * @access public
+     * @param  array|string $ext 允许后缀
+     * @return bool
+     */
+    public function checkDeny($ext)
+    {
+        if (is_string($ext)) {
+            $ext = explode(',', $ext);
+        }
+
+        $extension = strtolower(pathinfo($this->getInfo('name'), PATHINFO_EXTENSION));
+
+        if (in_array($extension, $ext)) {
             $this->error = 'extensions to upload is not allowed';
             return false;
         }

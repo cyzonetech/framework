@@ -2459,7 +2459,7 @@ class Query
         if (is_array($value)) {
             $this->bind = array_merge($this->bind, $value);
         } else {
-            $name = $name ?: 'ThinkBind_' . (count($this->bind) + 1);
+            $name = $name ?: 'ThinkBind_' . (count($this->bind) + 1) . '_';
 
             $this->bind[$name] = [$value, $type];
             return $name;
@@ -3659,7 +3659,7 @@ class Query
             $options['field'] = '*';
         }
 
-        foreach (['data', 'order'] as $name) {
+        foreach (['data', 'order', 'join', 'union'] as $name) {
             if (!isset($options[$name])) {
                 $options[$name] = [];
             }
@@ -3679,7 +3679,7 @@ class Query
             $options['master'] = true;
         }
 
-        foreach (['join', 'union', 'group', 'having', 'limit', 'force', 'comment'] as $name) {
+        foreach (['group', 'having', 'limit', 'force', 'comment'] as $name) {
             if (!isset($options[$name])) {
                 $options[$name] = '';
             }

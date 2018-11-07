@@ -217,7 +217,7 @@ class Config implements \ArrayAccess
      */
     public function has($name)
     {
-        if (!strpos($name, '.')) {
+        if (false === strpos($name, '.')) {
             $name = $this->prefix . '.' . $name;
         }
 
@@ -256,7 +256,7 @@ class Config implements \ArrayAccess
      */
     public function get($name = null, $default = null)
     {
-        if ($name && !strpos($name, '.')) {
+        if ($name && false === strpos($name, '.')) {
             $name = $this->prefix . '.' . $name;
         }
 
@@ -308,7 +308,7 @@ class Config implements \ArrayAccess
     public function set($name, $value = null)
     {
         if (is_string($name)) {
-            if (!strpos($name, '.')) {
+            if (false === strpos($name, '.')) {
                 $name = $this->prefix . '.' . $name;
             }
 
@@ -354,7 +354,7 @@ class Config implements \ArrayAccess
      */
     public function remove($name)
     {
-        if (!strpos($name, '.')) {
+        if (false === strpos($name, '.')) {
             $name = $this->prefix . '.' . $name;
         }
 

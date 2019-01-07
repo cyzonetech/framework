@@ -1518,7 +1518,9 @@ class Query
         $logic = strtoupper($logic);
 
         if ($field instanceof Where) {
-            $this->options['where'][$logic] = $field->parse();
+            if ($field->isValid()){
+                $this->options['where'][$logic][] = $field->parse();
+            }
             return $this;
         }
 

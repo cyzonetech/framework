@@ -30,12 +30,12 @@ class Where implements ArrayAccess
     /**
      * 创建一个查询表达式
      *
-     * @param  array    $where      查询条件数组
-     * @param  bool     $enclose    是否增加括号
+     * @param  array $where 查询条件数组
+     * @param  bool $enclose 是否增加括号
      */
     public function __construct(array $where = [], $enclose = false)
     {
-        $this->where   = $where;
+        $this->where = $where;
         $this->enclose = $enclose;
     }
 
@@ -78,13 +78,13 @@ class Where implements ArrayAccess
     /**
      * 分析查询表达式
      * @access protected
-     * @param  string   $field     查询字段
-     * @param  array    $where     查询条件
+     * @param  string $field 查询字段
+     * @param  array $where 查询条件
      * @return array
      */
     protected function parseItem($field, $where = [])
     {
-        $op        = $where[0];
+        $op = $where[0];
         $condition = isset($where[1]) ? $where[1] : null;
 
         if (is_array($op)) {
@@ -110,10 +110,19 @@ class Where implements ArrayAccess
     }
 
     /**
+     * where检测
+     * @return bool
+     */
+    public function isValid()
+    {
+        return !empty($this->where) ? true : false;
+    }
+
+    /**
      * 修改器 设置数据对象的值
      * @access public
-     * @param  string $name  名称
-     * @param  mixed  $value 值
+     * @param  string $name 名称
+     * @param  mixed $value 值
      * @return void
      */
     public function __set($name, $value)

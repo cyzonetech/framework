@@ -707,6 +707,13 @@ class Template
                 }
             }
 
+            // 替换模板中未定义的block
+            foreach ($this->blocks as $name => $val){
+                if (!in_array($name, array_keys($this->baseBlocks))){
+                    $extend = str_replace($val['begin'] . $val['content'] . $val['end'], $val['content'], $extend);
+                }
+            }
+
             $content = $extend;
         }
     }

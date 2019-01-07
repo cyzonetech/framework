@@ -279,12 +279,12 @@ class Config implements \ArrayAccess
 
         $name    = explode('.', $name);
         $name[0] = strtolower($name[0]);
-        $config  = $this->config;
 
-        if (!isset($config[$name[0]])) {
+        if (!isset($this->config[$name[0]])) {
             // 如果尚未载入 则动态加载配置文件
             $this->autoLoad($name[0]);
         }
+        $config  = $this->config;
 
         // 按.拆分成多维数组进行判断
         foreach ($name as $val) {

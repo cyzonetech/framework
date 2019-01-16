@@ -110,15 +110,6 @@ class Where implements ArrayAccess
     }
 
     /**
-     * where检测
-     * @return bool
-     */
-    public function isValid()
-    {
-        return !empty($this->where) ? true : false;
-    }
-
-    /**
      * 修改器 设置数据对象的值
      * @access public
      * @param  string $name 名称

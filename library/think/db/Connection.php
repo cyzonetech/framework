@@ -588,27 +588,34 @@ abstract class Connection
 
         Db::$queryTimes++;
 
-        // 调试开始
-        $this->debug(true);
+        try {
+            // 调试开始
+            $this->debug(true);
 
-        // 预处理
-        $this->PDOStatement = $this->linkID->prepare($sql);
+            // 预处理
+            $this->PDOStatement = $this->linkID->prepare($sql);
 
-        // 是否为存储过程调用
-        $procedure = in_array(strtolower(substr(trim($sql), 0, 4)), ['call', 'exec']);
+            // 是否为存储过程调用
+            $procedure = in_array(strtolower(substr(trim($sql), 0, 4)), ['call', 'exec']);
 
-        // 参数绑定
-        if ($procedure) {
-            $this->bindParam($bind);
-        } else {
-            $this->bindValue($bind);
+            // 参数绑定
+            if ($procedure) {
+                $this->bindParam($bind);
+            } else {
+                $this->bindValue($bind);
+            }
+
+            // 执行查询
+            $this->PDOStatement->execute();
+
+            // 调试结束
+            $this->debug(false, '', $master);
+        } catch (\PDOException $e) {
+            $this->log("[ SQL ] [ PDOException ] " . $this->getLastsql());
+            $this->log("[ SQL ] [ PDOException ] ERROR:" . implode(',', $e->errorInfo));
+
+            throw new PDOException($e, $this->config, $this->getLastsql());
         }
-
-        // 执行查询
-        $this->PDOStatement->execute();
-
-        // 调试结束
-        $this->debug(false, '', $master);
 
         // 返回结果集
         while ($result = $this->PDOStatement->fetch($this->fetchType)) {
@@ -683,6 +690,9 @@ abstract class Connection
             if ($this->isBreak($e)) {
                 return $this->close()->query($sql, $bind, $master, $pdo);
             }
+
+            $this->log("[ SQL ] [ PDOException ] " . $this->getLastsql());
+            $this->log("[ SQL ] [ PDOException ] ERROR:" . implode(',', $e->errorInfo));
 
             throw new PDOException($e, $this->config, $this->getLastsql());
         } catch (\Throwable $e) {
@@ -760,6 +770,9 @@ abstract class Connection
             if ($this->isBreak($e)) {
                 return $this->close()->execute($sql, $bind, $query);
             }
+
+            $this->log("[ SQL ] [ PDOException ] " . $this->getLastsql());
+            $this->log("[ SQL ] [ PDOException ] ERROR:" . implode(',', $e->errorInfo));
 
             throw new PDOException($e, $this->config, $this->getLastsql());
         } catch (\Throwable $e) {

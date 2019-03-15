@@ -408,7 +408,7 @@ class Template
         $this->parseLiteral($content);
 
         // 解析TopCms兼容语法
-        $this->parseTopCms($content);
+        $this->parseCmsLib($content);
 
         // 检查include语法
         $this->parseInclude($content);
@@ -420,7 +420,7 @@ class Template
         $this->parseExtend($content);
 
         // 解析TopCms兼容语法
-        $this->parseTopCms($content);
+        $this->parseCmsLib($content);
 
         // 替换包含文件中literal标签内容
         $this->parseLiteral($content);
@@ -491,12 +491,12 @@ class Template
      * @param  string $content 要解析的模板内容
      * @return void
      */
-    private function parseTopCms(&$content)
+    private function parseCmsLib(&$content)
     {
-        $className = 'app\\common\\lib\\TopCmsTemplate';
+        $className = 'app\\common\\lib\\CmsTemplateLib';
         if (class_exists($className)) {
-            $template = new $className;
-            $content = $template->parse($content);
+            $templateLib = new $className;
+            $content = $templateLib->parse($content);
         }
     }
 

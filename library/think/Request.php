@@ -1558,33 +1558,41 @@ class Request
      * @param  string        $type 变量类型
      * @return mixed
      */
-    public function only($name, $type = 'param')
+    public function only($name, $type = 'param') //post get
     {
         $param = $this->$type();
-
         if (is_string($name)) {
             $name = explode(',', $name);
         }
-
         $item = [];
         foreach ($name as $key => $val) {
-
+            $valType = '';
             if (is_int($key)) {
                 $default = null;
-                $key     = $val;
+                if (strpos($val, '/')) {
+                    list($key, $valType) = explode('/', $val);
+                } else {
+                    $key = $val;
+                }
             } else {
+                if (strpos($key, '/')) {
+                    list($key, $valType) = explode('/', $key);
+                }
                 $default = $val;
             }
 
             if (isset($param[$key])) {
                 $item[$key] = $param[$key];
+                if ($valType) {
+                    $this->typeCast($item[$key], $valType);
+                }
             } elseif (isset($default)) {
                 $item[$key] = $default;
             }
         }
-
         return $item;
     }
+
 
     /**
      * 排除指定参数获取

@@ -20,7 +20,7 @@ use think\route\Dispatch;
  */
 class App extends Container
 {
-    const VERSION = '5.1.23';
+    const VERSION = '5.1.35 LTS';
 
     /**
      * 当前模块路径
@@ -126,13 +126,8 @@ class App extends Container
 
     public function __construct($appPath = '')
     {
-        $this->appPath = $appPath ? realpath($appPath) . DIRECTORY_SEPARATOR : $this->getAppPath();
-
-        $this->thinkPath   = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR;
-        $this->rootPath    = dirname($this->appPath) . DIRECTORY_SEPARATOR;
-        $this->runtimePath = $this->rootPath . 'runtime' . DIRECTORY_SEPARATOR;
-        $this->routePath   = $this->rootPath . 'route' . DIRECTORY_SEPARATOR;
-        $this->configPath  = $this->rootPath . 'config' . DIRECTORY_SEPARATOR;
+        $this->thinkPath = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR;
+        $this->path($appPath);
     }
 
     /**
@@ -155,7 +150,8 @@ class App extends Container
      */
     public function path($path)
     {
-        $this->appPath = $path;
+        $this->appPath = $path ? realpath($path) . DIRECTORY_SEPARATOR : $this->getAppPath();
+
         return $this;
     }
 
@@ -174,9 +170,19 @@ class App extends Container
         $this->beginTime   = microtime(true);
         $this->beginMem    = memory_get_usage();
 
+        $this->rootPath    = dirname($this->appPath) . DIRECTORY_SEPARATOR;
+        $this->runtimePath = $this->rootPath . 'runtime' . DIRECTORY_SEPARATOR;
+        $this->routePath   = $this->rootPath . 'route' . DIRECTORY_SEPARATOR;
+        $this->configPath  = $this->rootPath . 'config' . DIRECTORY_SEPARATOR;
+
         static::setInstance($this);
 
         $this->instance('app', $this);
+
+        // 加载环境变量配置文件
+        if (is_file($this->rootPath . '.env')) {
+            $this->env->load($this->rootPath . '.env');
+        }
 
         $this->configExt = $this->env->get('config_ext', '.php');
 
@@ -194,11 +200,6 @@ class App extends Container
             'extend_path'  => $this->rootPath . 'extend' . DIRECTORY_SEPARATOR,
             'vendor_path'  => $this->rootPath . 'vendor' . DIRECTORY_SEPARATOR,
         ]);
-
-        // 加载环境变量配置文件
-        if (is_file($this->rootPath . '.env')) {
-            $this->env->load($this->rootPath . '.env');
-        }
 
         $this->namespace = $this->env->get('app_namespace', $this->namespace);
         $this->env->set('app_namespace', $this->namespace);
@@ -584,10 +585,12 @@ class App extends Container
         // 检测路由缓存
         if (!$this->appDebug && $this->config->get('route_check_cache')) {
             $routeKey = $this->getRouteCacheKey();
-            $option   = $this->config->get('route_cache_option') ?: $this->cache->getConfig();
+            $option   = $this->config->get('route_cache_option');
 
-            if ($this->cache->connect($option)->has($routeKey)) {
+            if ($option && $this->cache->connect($option)->has($routeKey)) {
                 return $this->cache->connect($option)->get($routeKey);
+            } elseif ($this->cache->has($routeKey)) {
+                return $this->cache->get($routeKey);
             }
         }
 
@@ -602,10 +605,11 @@ class App extends Container
 
         if (!empty($routeKey)) {
             try {
-                $this->cache
-                    ->connect($option)
-                    ->tag('route_cache')
-                    ->set($routeKey, $dispatch);
+                if ($option) {
+                    $this->cache->connect($option)->tag('route_cache')->set($routeKey, $dispatch);
+                } else {
+                    $this->cache->tag('route_cache')->set($routeKey, $dispatch);
+                }
             } catch (\Exception $e) {
                 // 存在闭包的时候缓存无效
             }
@@ -718,9 +722,9 @@ class App extends Container
         list($module, $class) = $this->parseModuleAndClass($name, $layer, $appendSuffix);
 
         if (class_exists($class)) {
-            return $this->__get($class);
+            return $this->make($class, true);
         } elseif ($empty && class_exists($emptyClass = $this->parseClass($module, $layer, $empty, $appendSuffix))) {
-            return $this->__get($emptyClass);
+            return $this->make($emptyClass, true);
         }
 
         throw new ClassNotFoundException('class not exists:' . $class, $class);

@@ -81,9 +81,10 @@ class Socket
             $memory_str = ' [内存消耗：' . $memory_use . 'kb]';
             $file_load  = ' [文件加载：' . count(get_included_files()) . ']';
 
+            $current_uri = '';
             if (isset($_SERVER['HTTP_HOST'])) {
                 $current_uri = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-            } else {
+            } elseif(isset($_SERVER['argv'])) {
                 $current_uri = 'cmd:' . implode(' ', $_SERVER['argv']);
             }
 

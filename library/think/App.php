@@ -215,6 +215,7 @@ class App extends Container
         // 加载应用状态配置
         $app_status = $this->env->get('app_status', $this->config('app.app_status'));
         if ($app_status) {
+            // 从rootPath加载环境配置
             $filename = $this->rootPath . $app_status . '.php';
             if (is_file($filename)) {
                 $configs = include $filename;

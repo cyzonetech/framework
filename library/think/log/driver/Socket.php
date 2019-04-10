@@ -84,8 +84,7 @@ class Socket
             $current_uri = '';
             if (isset($_SERVER['HTTP_HOST'])) {
                 $current_uri = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-            }
-            if(isset($_SERVER['argv'])) {
+            } elseif (isset($_SERVER['argv'])) {
                 $current_uri = 'cmd:' . implode(' ', $_SERVER['argv']);
             }
 

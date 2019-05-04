@@ -1259,21 +1259,13 @@ abstract class Connection
      * @access public
      * @param  Query     $query 查询对象
      * @param  string    $field   字段名
-     * @param  bool      $default   默认值
+     * @param  mixed     $default   默认值
+     * @param  bool      $one   是否返回一个值
      * @return mixed
      */
-    public function value(Query $query, $field, $default = null)
+    public function value(Query $query, $field, $default = null, $one = true)
     {
         $options = $query->getOptions();
-
-        if (empty($options['fetch_sql']) && !empty($options['cache'])) {
-            $cache  = $options['cache'];
-            $result = $this->getCacheData($query, $cache, null, $key);
-
-            if (false !== $result) {
-                return $result;
-            }
-        }
 
         if (isset($options['field'])) {
             $query->removeOption('field');
@@ -1284,7 +1276,19 @@ abstract class Connection
         }
 
         $query->setOption('field', $field);
-        $query->setOption('limit', 1);
+
+        if (empty($options['fetch_sql']) && !empty($options['cache'])) {
+            $cache  = $options['cache'];
+            $result = $this->getCacheData($query, $cache, null, $key);
+
+            if (false !== $result) {
+                return $result;
+            }
+        }
+
+        if ($one) {
+            $query->setOption('limit', 1);
+        }
 
         // 生成查询SQL
         $sql = $this->builder->select($query);
@@ -1333,7 +1337,7 @@ abstract class Connection
 
         $field = $aggregate . '(' . (!empty($distinct) ? 'DISTINCT ' : '') . $this->builder->parseKey($query, $field, true) . ') AS tp_' . strtolower($aggregate);
 
-        return $this->value($query, $field, 0);
+        return $this->value($query, $field, 0, false);
     }
 
     /**
@@ -1347,16 +1351,6 @@ abstract class Connection
     public function column(Query $query, $field, $key = '')
     {
         $options = $query->getOptions();
-
-        if (empty($options['fetch_sql']) && !empty($options['cache'])) {
-            // 判断查询缓存
-            $cache  = $options['cache'];
-            $result = $this->getCacheData($query, $cache, null, $guid);
-
-            if (false !== $result) {
-                return $result;
-            }
-        }
 
         if (isset($options['field'])) {
             $query->removeOption('field');
@@ -1374,6 +1368,16 @@ abstract class Connection
         }
 
         $query->setOption('field', $field);
+
+        if (empty($options['fetch_sql']) && !empty($options['cache'])) {
+            // 判断查询缓存
+            $cache  = $options['cache'];
+            $result = $this->getCacheData($query, $cache, null, $guid);
+
+            if (false !== $result) {
+                return $result;
+            }
+        }
 
         // 生成查询SQL
         $sql = $this->builder->select($query);

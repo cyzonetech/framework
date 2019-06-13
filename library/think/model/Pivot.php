@@ -17,7 +17,7 @@ class Pivot extends Model
 {
 
     /** @var Model */
-    public $parent;
+    public $_parent;
 
     protected $autoWriteTimestamp = false;
 
@@ -30,10 +30,10 @@ class Pivot extends Model
      */
     public function __construct($data = [], Model $parent = null, $table = '')
     {
-        $this->parent = $parent;
+        $this->_parent = $parent;
 
-        if (is_null($this->name)) {
-            $this->name = $table;
+        if (is_null($this->_name)) {
+            $this->_name = $table;
         }
 
         parent::__construct($data);

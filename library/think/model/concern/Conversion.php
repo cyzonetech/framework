@@ -26,25 +26,25 @@ trait Conversion
      * 数据输出显示的属性
      * @var array
      */
-    protected $visible = [];
+    protected $_visible = [];
 
     /**
      * 数据输出隐藏的属性
      * @var array
      */
-    protected $hidden = [];
+    protected $_hidden = [];
 
     /**
      * 数据输出需要追加的属性
      * @var array
      */
-    protected $append = [];
+    protected $_append = [];
 
     /**
      * 数据集对象名
      * @var string
      */
-    protected $resultSetType;
+    protected $_resultSetType;
 
     /**
      * 设置需要附加的输出属性
@@ -55,7 +55,7 @@ trait Conversion
      */
     public function append(array $append = [], $override = false)
     {
-        $this->append = $override ? $append : array_merge($this->append, $append);
+        $this->_append = $override ? $append : array_merge($this->_append, $append);
 
         return $this;
     }
@@ -75,8 +75,8 @@ trait Conversion
         }
 
         $relation = Loader::parseName($attr, 1, false);
-        if (isset($this->relation[$relation])) {
-            $model = $this->relation[$relation];
+        if (isset($this->_relation[$relation])) {
+            $model = $this->_relation[$relation];
         } else {
             $model = $this->getRelationData($this->$relation());
         }
@@ -84,10 +84,10 @@ trait Conversion
         if ($model instanceof Model) {
             foreach ($append as $key => $attr) {
                 $key = is_numeric($key) ? $attr : $key;
-                if (isset($this->data[$key])) {
+                if (isset($this->_data[$key])) {
                     throw new Exception('bind attr has exists:' . $key);
                 } else {
-                    $this->data[$key] = $model->$attr;
+                    $this->_data[$key] = $model->$attr;
                 }
             }
         }
@@ -104,7 +104,7 @@ trait Conversion
      */
     public function hidden(array $hidden = [], $override = false)
     {
-        $this->hidden = $override ? $hidden : array_merge($this->hidden, $hidden);
+        $this->_hidden = $override ? $hidden : array_merge($this->_hidden, $hidden);
 
         return $this;
     }
@@ -118,7 +118,7 @@ trait Conversion
      */
     public function visible(array $visible = [], $override = false)
     {
-        $this->visible = $override ? $visible : array_merge($this->visible, $visible);
+        $this->_visible = $override ? $visible : array_merge($this->_visible, $visible);
 
         return $this;
     }
@@ -133,56 +133,56 @@ trait Conversion
         $item       = [];
         $hasVisible = false;
 
-        foreach ($this->visible as $key => $val) {
+        foreach ($this->_visible as $key => $val) {
             if (is_string($val)) {
                 if (strpos($val, '.')) {
                     list($relation, $name)      = explode('.', $val);
-                    $this->visible[$relation][] = $name;
+                    $this->_visible[$relation][] = $name;
                 } else {
-                    $this->visible[$val] = true;
+                    $this->_visible[$val] = true;
                     $hasVisible          = true;
                 }
-                unset($this->visible[$key]);
+                unset($this->_visible[$key]);
             }
         }
 
-        foreach ($this->hidden as $key => $val) {
+        foreach ($this->_hidden as $key => $val) {
             if (is_string($val)) {
                 if (strpos($val, '.')) {
                     list($relation, $name)     = explode('.', $val);
-                    $this->hidden[$relation][] = $name;
+                    $this->_hidden[$relation][] = $name;
                 } else {
-                    $this->hidden[$val] = true;
+                    $this->_hidden[$val] = true;
                 }
-                unset($this->hidden[$key]);
+                unset($this->_hidden[$key]);
             }
         }
 
         // 合并关联数据
-        $data = array_merge($this->data, $this->relation);
+        $data = array_merge($this->_data, $this->_relation);
 
         foreach ($data as $key => $val) {
             if ($val instanceof Model || $val instanceof ModelCollection) {
                 // 关联模型对象
-                if (isset($this->visible[$key]) && is_array($this->visible[$key])) {
-                    $val->visible($this->visible[$key]);
-                } elseif (isset($this->hidden[$key]) && is_array($this->hidden[$key])) {
-                    $val->hidden($this->hidden[$key]);
+                if (isset($this->_visible[$key]) && is_array($this->_visible[$key])) {
+                    $val->visible($this->_visible[$key]);
+                } elseif (isset($this->_hidden[$key]) && is_array($this->_hidden[$key])) {
+                    $val->hidden($this->_hidden[$key]);
                 }
                 // 关联模型对象
-                if (!isset($this->hidden[$key]) || true !== $this->hidden[$key]) {
+                if (!isset($this->_hidden[$key]) || true !== $this->_hidden[$key]) {
                     $item[$key] = $val->toArray();
                 }
-            } elseif (isset($this->visible[$key])) {
+            } elseif (isset($this->_visible[$key])) {
                 $item[$key] = $this->getAttr($key);
-            } elseif (!isset($this->hidden[$key]) && !$hasVisible) {
+            } elseif (!isset($this->_hidden[$key]) && !$hasVisible) {
                 $item[$key] = $this->getAttr($key);
             }
         }
 
         // 追加属性（必须定义获取器）
-        if (!empty($this->append)) {
-            foreach ($this->append as $key => $name) {
+        if (!empty($this->_append)) {
+            foreach ($this->_append as $key => $name) {
                 if (is_array($name)) {
                     // 追加关联对象属性
                     $relation = $this->getRelation($key);
@@ -235,7 +235,7 @@ trait Conversion
      */
     public function removeRelation()
     {
-        $this->relation = [];
+        $this->_relation = [];
         return $this;
     }
 
@@ -259,7 +259,7 @@ trait Conversion
      */
     public function toCollection($collection, $resultSetType = null)
     {
-        $resultSetType = $resultSetType ?: $this->resultSetType;
+        $resultSetType = $resultSetType ?: $this->_resultSetType;
 
         if ($resultSetType && false !== strpos($resultSetType, '\\')) {
             $collection = new $resultSetType($collection);

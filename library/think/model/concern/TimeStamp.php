@@ -22,25 +22,25 @@ trait TimeStamp
      * 是否需要自动写入时间戳 如果设置为字符串 则表示时间字段的类型
      * @var bool|string
      */
-    protected $autoWriteTimestamp;
+    protected $_autoWriteTimestamp;
 
     /**
      * 创建时间字段 false表示关闭
      * @var false|string
      */
-    protected $createTime = 'create_time';
+    protected $_createTime = 'create_time';
 
     /**
      * 更新时间字段 false表示关闭
      * @var false|string
      */
-    protected $updateTime = 'update_time';
+    protected $_updateTime = 'update_time';
 
     /**
      * 时间字段显示格式
      * @var string
      */
-    protected $dateFormat;
+    protected $_dateFormat;
 
     /**
      * 时间日期字段格式化处理
@@ -80,12 +80,12 @@ trait TimeStamp
     protected function checkTimeStampWrite()
     {
         // 自动写入创建时间和更新时间
-        if ($this->autoWriteTimestamp) {
-            if ($this->createTime && !isset($this->data[$this->createTime])) {
-                $this->data[$this->createTime] = $this->autoWriteTimestamp($this->createTime);
+        if ($this->_autoWriteTimestamp) {
+            if ($this->_createTime && !isset($this->_data[$this->_createTime])) {
+                $this->_data[$this->_createTime] = $this->autoWriteTimestamp($this->_createTime);
             }
-            if ($this->updateTime && !isset($this->data[$this->updateTime])) {
-                $this->data[$this->updateTime] = $this->autoWriteTimestamp($this->updateTime);
+            if ($this->_updateTime && !isset($this->_data[$this->_updateTime])) {
+                $this->_data[$this->_updateTime] = $this->autoWriteTimestamp($this->_updateTime);
             }
         }
     }

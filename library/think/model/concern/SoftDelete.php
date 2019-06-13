@@ -14,7 +14,7 @@ trait SoftDelete
      * 是否包含软删除数据
      * @var bool
      */
-    protected $withTrashed = false;
+    protected $_withTrashed = false;
 
     /**
      * 判断当前实例是否被软删除
@@ -52,7 +52,7 @@ trait SoftDelete
      */
     protected function withTrashedData($withTrashed)
     {
-        $this->withTrashed = $withTrashed;
+        $this->_withTrashed = $withTrashed;
         return $this;
     }
 
@@ -82,8 +82,8 @@ trait SoftDelete
      */
     protected function getWithTrashedExp()
     {
-        return is_null($this->defaultSoftDelete) ?
-        ['notnull', ''] : ['<>', $this->defaultSoftDelete];
+        return is_null($this->_defaultSoftDelete) ?
+        ['notnull', ''] : ['<>', $this->_defaultSoftDelete];
     }
 
     /**
@@ -188,7 +188,7 @@ trait SoftDelete
             $this->db(false)
                 ->where($where)
                 ->useSoftDelete($name, $this->getWithTrashedExp())
-                ->update([$name => $this->defaultSoftDelete]);
+                ->update([$name => $this->_defaultSoftDelete]);
 
             $this->trigger('after_restore');
 
@@ -206,7 +206,7 @@ trait SoftDelete
      */
     protected function getDeleteTimeField($read = false)
     {
-        $field = property_exists($this, 'deleteTime') && isset($this->deleteTime) ? $this->deleteTime : 'delete_time';
+        $field = property_exists($this, '_deleteTime') && isset($this->_deleteTime) ? $this->_deleteTime : 'delete_time';
 
         if (false === $field) {
             return false;
@@ -235,7 +235,7 @@ trait SoftDelete
         $field = $this->getDeleteTimeField(true);
 
         if ($field) {
-            $condition = is_null($this->defaultSoftDelete) ? ['null', ''] : ['=', $this->defaultSoftDelete];
+            $condition = is_null($this->_defaultSoftDelete) ? ['null', ''] : ['=', $this->_defaultSoftDelete];
             $query->useSoftDelete($field, $condition);
         }
     }

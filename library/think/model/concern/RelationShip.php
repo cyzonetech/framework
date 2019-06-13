@@ -34,25 +34,25 @@ trait RelationShip
      * 父关联模型对象
      * @var object
      */
-    private $parent;
+    private $_parent;
 
     /**
      * 模型关联数据
      * @var array
      */
-    private $relation = [];
+    private $_relation = [];
 
     /**
      * 关联写入定义信息
      * @var array
      */
-    private $together;
+    private $_together;
 
     /**
      * 关联自动写入信息
      * @var array
      */
-    protected $relationWrite;
+    protected $_relationWrite;
 
     /**
      * 设置父关联对象
@@ -62,7 +62,7 @@ trait RelationShip
      */
     public function setParent($model)
     {
-        $this->parent = $model;
+        $this->_parent = $model;
 
         return $this;
     }
@@ -74,7 +74,7 @@ trait RelationShip
      */
     public function getParent()
     {
-        return $this->parent;
+        return $this->_parent;
     }
 
     /**
@@ -86,9 +86,9 @@ trait RelationShip
     public function getRelation($name = null)
     {
         if (is_null($name)) {
-            return $this->relation;
-        } elseif (array_key_exists($name, $this->relation)) {
-            return $this->relation[$name];
+            return $this->_relation;
+        } elseif (array_key_exists($name, $this->_relation)) {
+            return $this->_relation[$name];
         }
         return;
     }
@@ -107,10 +107,10 @@ trait RelationShip
         $method = 'set' . Loader::parseName($name, 1) . 'Attr';
 
         if (method_exists($this, $method)) {
-            $value = $this->$method($value, array_merge($this->data, $data));
+            $value = $this->$method($value, array_merge($this->_data, $data));
         }
 
-        $this->relation[$name] = $value;
+        $this->_relation[$name] = $value;
 
         return $this;
     }
@@ -127,7 +127,7 @@ trait RelationShip
             $relation = explode(',', $relation);
         }
 
-        $this->together = $relation;
+        $this->_together = $relation;
 
         $this->checkAutoRelationWrite();
 
@@ -207,7 +207,7 @@ trait RelationShip
                 $relationResult->getQuery()->withAttr($withRelationAttr[$relationName]);
             }
 
-            $this->relation[$relation] = $relationResult->getRelation($subRelation, $closure);
+            $this->_relation[$relation] = $relationResult->getRelation($subRelation, $closure);
         }
 
         return $this;
@@ -344,7 +344,7 @@ trait RelationShip
         // 记录当前关联信息
         $model      = $this->parseModel($model);
         $localKey   = $localKey ?: $this->getPk();
-        $foreignKey = $foreignKey ?: $this->getForeignKey($this->name);
+        $foreignKey = $foreignKey ?: $this->getForeignKey($this->_name);
 
         return new HasOne($this, $model, $foreignKey, $localKey);
     }
@@ -382,7 +382,7 @@ trait RelationShip
         // 记录当前关联信息
         $model      = $this->parseModel($model);
         $localKey   = $localKey ?: $this->getPk();
-        $foreignKey = $foreignKey ?: $this->getForeignKey($this->name);
+        $foreignKey = $foreignKey ?: $this->getForeignKey($this->_name);
 
         return new HasMany($this, $model, $foreignKey, $localKey);
     }
@@ -403,7 +403,7 @@ trait RelationShip
         $model      = $this->parseModel($model);
         $through    = $this->parseModel($through);
         $localKey   = $localKey ?: $this->getPk();
-        $foreignKey = $foreignKey ?: $this->getForeignKey($this->name);
+        $foreignKey = $foreignKey ?: $this->getForeignKey($this->_name);
         $throughKey = $throughKey ?: $this->getForeignKey((new $through)->getName());
 
         return new HasManyThrough($this, $model, $through, $foreignKey, $throughKey, $localKey);
@@ -423,9 +423,9 @@ trait RelationShip
         // 记录当前关联信息
         $model      = $this->parseModel($model);
         $name       = Loader::parseName(basename(str_replace('\\', '/', $model)));
-        $table      = $table ?: Loader::parseName($this->name) . '_' . $name;
+        $table      = $table ?: Loader::parseName($this->_name) . '_' . $name;
         $foreignKey = $foreignKey ?: $name . '_id';
-        $localKey   = $localKey ?: $this->getForeignKey($this->name);
+        $localKey   = $localKey ?: $this->getForeignKey($this->_name);
 
         return new BelongsToMany($this, $model, $table, $foreignKey, $localKey);
     }
@@ -575,8 +575,8 @@ trait RelationShip
      */
     protected function getRelationData(Relation $modelRelation)
     {
-        if ($this->parent && !$modelRelation->isSelfRelation() && get_class($this->parent) == get_class($modelRelation->getModel())) {
-            $value = $this->parent;
+        if ($this->_parent && !$modelRelation->isSelfRelation() && get_class($this->_parent) == get_class($modelRelation->getModel())) {
+            $value = $this->_parent;
         } else {
             // 获取关联数据
             $value = $modelRelation->getRelation();
@@ -592,25 +592,25 @@ trait RelationShip
      */
     protected function checkAutoRelationWrite()
     {
-        foreach ($this->together as $key => $name) {
+        foreach ($this->_together as $key => $name) {
             if (is_array($name)) {
                 if (key($name) === 0) {
-                    $this->relationWrite[$key] = [];
+                    $this->_relationWrite[$key] = [];
                     // 绑定关联属性
                     foreach ((array) $name as $val) {
-                        if (isset($this->data[$val])) {
-                            $this->relationWrite[$key][$val] = $this->data[$val];
+                        if (isset($this->_data[$val])) {
+                            $this->_relationWrite[$key][$val] = $this->_data[$val];
                         }
                     }
                 } else {
                     // 直接传入关联数据
-                    $this->relationWrite[$key] = $name;
+                    $this->_relationWrite[$key] = $name;
                 }
-            } elseif (isset($this->relation[$name])) {
-                $this->relationWrite[$name] = $this->relation[$name];
-            } elseif (isset($this->data[$name])) {
-                $this->relationWrite[$name] = $this->data[$name];
-                unset($this->data[$name]);
+            } elseif (isset($this->_relation[$name])) {
+                $this->_relationWrite[$name] = $this->_relation[$name];
+            } elseif (isset($this->_data[$name])) {
+                $this->_relationWrite[$name] = $this->_data[$name];
+                unset($this->_data[$name]);
             }
         }
     }
@@ -622,7 +622,7 @@ trait RelationShip
      */
     protected function autoRelationUpdate()
     {
-        foreach ($this->relationWrite as $name => $val) {
+        foreach ($this->_relationWrite as $name => $val) {
             if ($val instanceof Model) {
                 $val->isUpdate()->save();
             } else {
@@ -641,7 +641,7 @@ trait RelationShip
      */
     protected function autoRelationInsert()
     {
-        foreach ($this->relationWrite as $name => $val) {
+        foreach ($this->_relationWrite as $name => $val) {
             $method = Loader::parseName($name, 1, false);
             $this->$method()->save($val);
         }
@@ -654,7 +654,7 @@ trait RelationShip
      */
     protected function autoRelationDelete()
     {
-        foreach ($this->relationWrite as $key => $name) {
+        foreach ($this->_relationWrite as $key => $name) {
             $name   = is_numeric($key) ? $name : $key;
             $result = $this->getRelation($name);
 

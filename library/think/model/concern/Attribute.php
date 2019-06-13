@@ -23,73 +23,73 @@ trait Attribute
      * 数据表主键 复合主键使用数组定义
      * @var string|array
      */
-    protected $pk = 'id';
+    protected $_pk = 'id';
 
     /**
      * 数据表字段信息 留空则自动获取
      * @var array
      */
-    protected $field = [];
+    protected $_field = [];
 
     /**
      * JSON数据表字段
      * @var array
      */
-    protected $json = [];
+    protected $_json = [];
 
     /**
      * JSON数据取出是否需要转换为数组
      * @var bool
      */
-    protected $jsonAssoc = false;
+    protected $_jsonAssoc = false;
 
     /**
      * JSON数据表字段类型
      * @var array
      */
-    protected $jsonType = [];
+    protected $_jsonType = [];
 
     /**
      * 数据表废弃字段
      * @var array
      */
-    protected $disuse = [];
+    protected $_disuse = [];
 
     /**
      * 数据表只读字段
      * @var array
      */
-    protected $readonly = [];
+    protected $_readonly = [];
 
     /**
      * 数据表字段类型
      * @var array
      */
-    protected $type = [];
+    protected $_type = [];
 
     /**
      * 当前模型数据
      * @var array
      */
-    private $data = [];
+    private $_data = [];
 
     /**
      * 修改器执行记录
      * @var array
      */
-    private $set = [];
+    private $_set = [];
 
     /**
      * 原始数据
      * @var array
      */
-    private $origin = [];
+    private $_origin = [];
 
     /**
      * 动态获取器
      * @var array
      */
-    private $withAttr = [];
+    private $_withAttr = [];
 
     /**
      * 获取模型对象的主键
@@ -98,7 +98,7 @@ trait Attribute
      */
     public function getPk()
     {
-        return $this->pk;
+        return $this->_pk;
     }
 
     /**
@@ -127,8 +127,8 @@ trait Attribute
     public function getKey()
     {
         $pk = $this->getPk();
-        if (is_string($pk) && array_key_exists($pk, $this->data)) {
-            return $this->data[$pk];
+        if (is_string($pk) && array_key_exists($pk, $this->_data)) {
+            return $this->_data[$pk];
         }
 
         return;
@@ -146,7 +146,7 @@ trait Attribute
             $field = explode(',', $field);
         }
 
-        $this->field = $field;
+        $this->_field = $field;
 
         return $this;
     }
@@ -163,7 +163,7 @@ trait Attribute
             $field = explode(',', $field);
         }
 
-        $this->readonly = $field;
+        $this->_readonly = $field;
 
         return $this;
     }
@@ -178,20 +178,20 @@ trait Attribute
     public function data($data, $value = null)
     {
         if (is_string($data)) {
-            $this->data[$data] = $value;
+            $this->_data[$data] = $value;
             return $this;
         }
 
         // 清空数据
-        $this->data = [];
+        $this->_data = [];
 
         if (is_object($data)) {
             $data = get_object_vars($data);
         }
 
-        if ($this->disuse) {
+        if ($this->_disuse) {
             // 废弃字段
-            foreach ((array) $this->disuse as $key) {
+            foreach ((array) $this->_disuse as $key) {
                 if (array_key_exists($key, $data)) {
                     unset($data[$key]);
                 }
@@ -206,11 +206,11 @@ trait Attribute
         } elseif (is_array($value)) {
             foreach ($value as $name) {
                 if (isset($data[$name])) {
-                    $this->data[$name] = $data[$name];
+                    $this->_data[$name] = $data[$name];
                 }
             }
         } else {
-            $this->data = $data;
+            $this->_data = $data;
         }
 
         return $this;
@@ -235,7 +235,7 @@ trait Attribute
                 $data = get_object_vars($data);
             }
 
-            $this->data = array_merge($this->data, $data);
+            $this->_data = array_merge($this->_data, $data);
         }
 
         return $this;
@@ -250,9 +250,9 @@ trait Attribute
     public function getOrigin($name = null)
     {
         if (is_null($name)) {
-            return $this->origin;
+            return $this->_origin;
         }
-        return array_key_exists($name, $this->origin) ? $this->origin[$name] : null;
+        return array_key_exists($name, $this->_origin) ? $this->_origin[$name] : null;
     }
 
     /**
@@ -264,12 +264,14 @@ trait Attribute
      */
     public function getData($name = null)
     {
+        $name = Loader::parseName($name);
+
         if (is_null($name)) {
-            return $this->data;
-        } elseif (array_key_exists($name, $this->data)) {
-            return $this->data[$name];
-        } elseif (array_key_exists($name, $this->relation)) {
-            return $this->relation[$name];
+            return $this->_data;
+        } elseif (array_key_exists($name, $this->_data)) {
+            return $this->_data[$name];
+        } elseif (array_key_exists($name, $this->_relation)) {
+            return $this->_relation[$name];
         }
         throw new InvalidArgumentException('property not exists:' . static::class . '->' . $name);
     }
@@ -281,10 +283,10 @@ trait Attribute
      */
     public function getChangedData()
     {
-        if ($this->force) {
-            $data = $this->data;
+        if ($this->_force) {
+            $data = $this->_data;
         } else {
-            $data = array_udiff_assoc($this->data, $this->origin, function ($a, $b) {
+            $data = array_udiff_assoc($this->_data, $this->_origin, function ($a, $b) {
                 if ((empty($a) || empty($b)) && $a !== $b) {
                     return 1;
                 }
@@ -293,9 +295,9 @@ trait Attribute
             });
         }
 
-        if (!empty($this->readonly)) {
+        if (!empty($this->_readonly)) {
             // 只读字段不允许更新
-            foreach ($this->readonly as $key => $field) {
+            foreach ($this->_readonly as $key => $field) {
                 if (isset($data[$field])) {
                     unset($data[$field]);
                 }
@@ -315,11 +317,11 @@ trait Attribute
      */
     public function setAttr($name, $value, $data = [])
     {
-        if (isset($this->set[$name])) {
+        if (isset($this->_set[$name])) {
             return;
         }
 
-        if (is_null($value) && $this->autoWriteTimestamp && in_array($name, [$this->createTime, $this->updateTime])) {
+        if (is_null($value) && $this->_autoWriteTimestamp && in_array($name, [$this->_createTime, $this->_updateTime])) {
             // 自动写入的时间戳字段
             $value = $this->autoWriteTimestamp($name);
         } else {
@@ -327,21 +329,21 @@ trait Attribute
             $method = 'set' . Loader::parseName($name, 1) . 'Attr';
 
             if (method_exists($this, $method)) {
-                $origin = $this->data;
-                $value  = $this->$method($value, array_merge($this->data, $data));
+                $origin = $this->_data;
+                $value  = $this->$method($value, array_merge($this->_data, $data));
 
-                $this->set[$name] = true;
-                if (is_null($value) && $origin !== $this->data) {
+                $this->_set[$name] = true;
+                if (is_null($value) && $origin !== $this->_data) {
                     return;
                 }
-            } elseif (isset($this->type[$name])) {
+            } elseif (isset($this->_type[$name])) {
                 // 类型转换
-                $value = $this->writeTransform($value, $this->type[$name]);
+                $value = $this->writeTransform($value, $this->_type[$name]);
             }
         }
 
         // 设置数据对象属性
-        $this->data[$name] = $value;
+        $this->_data[$name] = $value;
     }
 
     /**
@@ -352,7 +354,7 @@ trait Attribute
      */
     public function isAutoWriteTimestamp($auto)
     {
-        $this->autoWriteTimestamp = $auto;
+        $this->_autoWriteTimestamp = $auto;
 
         return $this;
     }
@@ -365,8 +367,8 @@ trait Attribute
      */
     protected function autoWriteTimestamp($name)
     {
-        if (isset($this->type[$name])) {
-            $type = $this->type[$name];
+        if (isset($this->_type[$name])) {
+            $type = $this->_type[$name];
 
             if (strpos($type, ':')) {
                 list($type, $param) = explode(':', $type, 2);
@@ -383,7 +385,7 @@ trait Attribute
                     $value = time();
                     break;
             }
-        } elseif (is_string($this->autoWriteTimestamp) && in_array(strtolower($this->autoWriteTimestamp), [
+        } elseif (is_string($this->_autoWriteTimestamp) && in_array(strtolower($this->_autoWriteTimestamp), [
             'datetime',
             'date',
             'timestamp',
@@ -483,33 +485,33 @@ trait Attribute
         $fieldName = Loader::parseName($name);
         $method    = 'get' . Loader::parseName($name, 1) . 'Attr';
 
-        if (isset($this->withAttr[$fieldName])) {
+        if (isset($this->_withAttr[$fieldName])) {
             if ($notFound && $relation = $this->isRelationAttr($name)) {
                 $modelRelation = $this->$relation();
                 $value         = $this->getRelationData($modelRelation);
             }
 
-            $closure = $this->withAttr[$fieldName];
-            $value   = $closure($value, $this->data);
+            $closure = $this->_withAttr[$fieldName];
+            $value   = $closure($value, $this->_data);
         } elseif (method_exists($this, $method)) {
             if ($notFound && $relation = $this->isRelationAttr($name)) {
                 $modelRelation = $this->$relation();
                 $value         = $this->getRelationData($modelRelation);
             }
 
-            $value = $this->$method($value, $this->data);
-        } elseif (isset($this->type[$name])) {
+            $value = $this->$method($value, $this->_data);
+        } elseif (isset($this->_type[$name])) {
             // 类型转换
-            $value = $this->readTransform($value, $this->type[$name]);
-        } elseif ($this->autoWriteTimestamp && in_array($name, [$this->createTime, $this->updateTime])) {
-            if (is_string($this->autoWriteTimestamp) && in_array(strtolower($this->autoWriteTimestamp), [
+            $value = $this->readTransform($value, $this->_type[$name]);
+        } elseif ($this->_autoWriteTimestamp && in_array($name, [$this->_createTime, $this->_updateTime])) {
+            if (is_string($this->_autoWriteTimestamp) && in_array(strtolower($this->_autoWriteTimestamp), [
                 'datetime',
                 'date',
                 'timestamp',
             ])) {
-                $value = $this->formatDateTime($this->dateFormat, $value);
+                $value = $this->formatDateTime($this->_dateFormat, $value);
             } else {
-                $value = $this->formatDateTime($this->dateFormat, $value, true);
+                $value = $this->formatDateTime($this->_dateFormat, $value, true);
             }
         } elseif ($notFound) {
             $value = $this->getRelationAttribute($name, $item);
@@ -594,13 +596,13 @@ trait Attribute
                 break;
             case 'timestamp':
                 if (!is_null($value)) {
-                    $format = !empty($param) ? $param : $this->dateFormat;
+                    $format = !empty($param) ? $param : $this->_dateFormat;
                     $value  = $this->formatDateTime($format, $value, true);
                 }
                 break;
             case 'datetime':
                 if (!is_null($value)) {
-                    $format = !empty($param) ? $param : $this->dateFormat;
+                    $format = !empty($param) ? $param : $this->_dateFormat;
                     $value  = $this->formatDateTime($format, $value);
                 }
                 break;
@@ -643,12 +645,12 @@ trait Attribute
             foreach ($name as $key => $val) {
                 $key = Loader::parseName($key);
 
-                $this->withAttr[$key] = $val;
+                $this->_withAttr[$key] = $val;
             }
         } else {
             $name = Loader::parseName($name);
 
-            $this->withAttr[$name] = $callback;
+            $this->_withAttr[$name] = $callback;
         }
 
         return $this;

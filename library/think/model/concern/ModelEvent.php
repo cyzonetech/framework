@@ -23,25 +23,25 @@ trait ModelEvent
      * 模型回调
      * @var array
      */
-    private static $event = [];
+    private static $_event = [];
 
     /**
      * 模型事件观察
      * @var array
      */
-    protected static $observe = ['before_write', 'after_write', 'before_insert', 'after_insert', 'before_update', 'after_update', 'before_delete', 'after_delete', 'before_restore', 'after_restore'];
+    protected static $_observe = ['before_write', 'after_write', 'before_insert', 'after_insert', 'before_update', 'after_update', 'before_delete', 'after_delete', 'before_restore', 'after_restore'];
 
     /**
      * 绑定模型事件观察者类
      * @var array
      */
-    protected $observerClass;
+    protected $_observerClass;
 
     /**
      * 是否需要事件响应
      * @var bool
      */
-    private $withEvent = true;
+    private $_withEvent = true;
 
     /**
      * 注册回调方法
@@ -56,10 +56,10 @@ trait ModelEvent
         $class = static::class;
 
         if ($override) {
-            self::$event[$class][$event] = [];
+            self::$_event[$class][$event] = [];
         }
 
-        self::$event[$class][$event][] = $callback;
+        self::$_event[$class][$event][] = $callback;
     }
 
     /**
@@ -69,7 +69,7 @@ trait ModelEvent
      */
     public static function flushEvent()
     {
-        self::$event[static::class] = [];
+        self::$_event[static::class] = [];
     }
 
     /**
@@ -82,7 +82,7 @@ trait ModelEvent
     {
         self::flushEvent();
 
-        foreach (static::$observe as $event) {
+        foreach (static::$_observe as $event) {
             $eventFuncName = Loader::parseName($event, 1, false);
 
             if (method_exists($class, $eventFuncName)) {
@@ -99,7 +99,7 @@ trait ModelEvent
      */
     public function withEvent($event)
     {
-        $this->withEvent = $event;
+        $this->_withEvent = $event;
         return $this;
     }
 
@@ -113,8 +113,8 @@ trait ModelEvent
     {
         $class = static::class;
 
-        if ($this->withEvent && isset(self::$event[$class][$event])) {
-            foreach (self::$event[$class][$event] as $callback) {
+        if ($this->_withEvent && isset(self::$_event[$class][$event])) {
+            foreach (self::$_event[$class][$event] as $callback) {
                 $result = Container::getInstance()->invoke($callback, [$this]);
 
                 if (false === $result) {

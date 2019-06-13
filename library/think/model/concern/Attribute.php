@@ -317,6 +317,7 @@ trait Attribute
      */
     public function setAttr($name, $value, $data = [])
     {
+        $name = Loader::parseName($name);
         if (isset($this->_set[$name])) {
             return;
         }

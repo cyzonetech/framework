@@ -126,7 +126,7 @@ class Log implements LoggerInterface
             $msg = strtr($msg, $replace);
         }
 
-        if (PHP_SAPI == 'cli') {
+        if (PHP_SAPI == 'cli' && !env('app_swoole', false)) {
             if (empty($this->config['level']) || in_array($type, $this->config['level'])) {
                 // 命令行日志实时写入
                 $this->write($msg, $type, true);

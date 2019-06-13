@@ -444,7 +444,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      */
     public function isEmpty()
     {
-        return empty($this->data);
+        return empty($this->_data);
     }
 
     /**

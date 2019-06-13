@@ -19,7 +19,7 @@ class Pivot extends Model
     /** @var Model */
     public $_parent;
 
-    protected $autoWriteTimestamp = false;
+    protected $_autoWriteTimestamp = false;
 
     /**
      * 架构函数

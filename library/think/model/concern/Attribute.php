@@ -552,7 +552,7 @@ trait Attribute
                 }
 
                 // 保存关联对象值
-                $this->relation[$name] = $value;
+                $this->_relation[$name] = $value;
 
                 return $value;
             }

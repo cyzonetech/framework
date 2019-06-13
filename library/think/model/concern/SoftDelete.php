@@ -119,7 +119,7 @@ trait SoftDelete
         }
 
         // 关联删除
-        if (!empty($this->relationWrite)) {
+        if (!empty($this->_relationWrite)) {
             $this->autoRelationDelete();
         }
 

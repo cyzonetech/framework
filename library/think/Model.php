@@ -317,7 +317,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         $query = $this->buildQuery();
 
         // 软删除
-        if (property_exists($this, '_withTrashed') && !$this->_withTrashed) {
+        if (property_exists($this, '_withTrashed') && !$this->_withTrashed && method_exists($this, 'withNoTrashed')) {
             $this->withNoTrashed($query);
         }
 
@@ -454,6 +454,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      * @param  array  $where    更新条件
      * @param  string $sequence 自增序列名
      * @return bool
+     * @throws
      */
     public function save($data = [], $where = [], $sequence = null)
     {
@@ -551,6 +552,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      * @access protected
      * @param  mixed   $where 更新条件
      * @return bool
+     * @throws \Exception
      */
     protected function updateData($where)
     {
@@ -649,6 +651,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      * @access protected
      * @param  string   $sequence 自增序列名
      * @return bool
+     * @throws \Exception
      */
     protected function insertData($sequence)
     {
@@ -857,6 +860,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      * 删除当前的记录
      * @access public
      * @return bool
+     * @throws \Exception
      */
     public function delete()
     {
@@ -987,11 +991,9 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      * @access public
      * @return mixed
      */
-    public function setError($error)
+    public function setError($msg)
     {
-        $this->_error = $error;
-
-        return;
+        $this->_error = $msg;
     }
 
     /**

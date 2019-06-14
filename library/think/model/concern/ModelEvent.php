@@ -75,7 +75,7 @@ trait ModelEvent
     /**
      * 注册一个模型观察者
      *
-     * @param  object|string  $class
+     * @param  object|string|array  $class
      * @return void
      */
     public static function observe($class)

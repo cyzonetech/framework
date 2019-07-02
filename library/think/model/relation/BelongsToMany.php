@@ -58,6 +58,15 @@ class BelongsToMany extends Relation
     }
 
     /**
+     * 获取中间表名称
+     * @return string
+     */
+    public function getMiddle()
+    {
+        return $this->middle;
+    }
+
+    /**
      * 设置中间表模型
      * @access public
      * @param  $pivot

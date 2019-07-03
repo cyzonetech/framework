@@ -69,6 +69,26 @@ abstract class Relation
     }
 
     /**
+     * 获取关联表外键
+     * @access public
+     * @return String
+     */
+    public function getForeignKey()
+    {
+        return $this->foreignKey;
+    }
+
+    /**
+     * 获取关联表主键
+     * @access public
+     * @return String
+     */
+    public function getLocalKey()
+    {
+        return $this->localKey;
+    }
+
+    /**
      * 设置当前关联为自关联
      * @access public
      * @param  bool $self 是否自关联

@@ -125,7 +125,18 @@ class File
             $message = $this->parseLog($info);
         }
 
-        return error_log($message, 3, $destination);
+        if (!is_file($destination)) {
+            $first = true;
+        }
+        $ret = error_log($message, 3, $destination);
+        try {
+            if (isset($first) && is_file($destination)) {
+                chmod($destination, 0777);
+                unset($first);
+            }
+        } catch (\Exception $e) { }
+
+        return $ret;
     }
 
     /**

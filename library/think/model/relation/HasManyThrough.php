@@ -11,6 +11,8 @@
 
 namespace think\model\relation;
 
+use Closure;
+use think\App;
 use think\db\Query;
 use think\Loader;
 use think\Model;
@@ -60,7 +62,7 @@ class HasManyThrough extends Relation
      */
     public function getRelation($subRelation = '', $closure = null)
     {
-        if ($closure) {
+        if ($closure instanceof Closure) {
             $closure($this->query);
         }
 
@@ -130,8 +132,8 @@ class HasManyThrough extends Relation
             ->alias($model)
             ->join($throughTable, $throughTable . '.' . $this->foreignKey . '=' . $model . '.' . $this->localKey)
             ->join($modelTable, $modelTable . '.' . $throughKey . '=' . $throughTable . '.' . $this->throughPk)
-            ->when($softDelete, function ($query) use ($softDelete, $relationTable) {
-                $query->where($relationTable . strstr($softDelete[0], '.'), '=' == $softDelete[1][0] ? $softDelete[1][1] : null);
+            ->when($softDelete, function ($query) use ($softDelete, $modelTable) {
+                $query->where($modelTable . strstr($softDelete[0], '.'), '=' == $softDelete[1][0] ? $softDelete[1][1] : null);
             })
             ->group($modelTable . '.' . $this->throughKey)
             ->where($where)
@@ -143,11 +145,11 @@ class HasManyThrough extends Relation
      * @access protected
      * @param  array   $resultSet   数据集
      * @param  string  $relation    当前关联名
-     * @param  array   $subRelation 子关联名
+     * @param  string   $subRelation 子关联名
      * @param  Closure $closure     闭包
      * @return void
      */
-    public function eagerlyResultSet(array &$resultSet, string $relation, array $subRelation = [], Closure $closure = null): void
+    public function eagerlyResultSet(array &$resultSet, $relation, $subRelation = '', $closure = null)
     {
         $localKey   = $this->localKey;
         $foreignKey = $this->foreignKey;
@@ -192,11 +194,11 @@ class HasManyThrough extends Relation
      * @access protected
      * @param  Model   $result      数据对象
      * @param  string  $relation    当前关联名
-     * @param  array   $subRelation 子关联名
+     * @param  string   $subRelation 子关联名
      * @param  Closure $closure     闭包
      * @return void
      */
-    public function eagerlyResult(Model $result, string $relation, array $subRelation = [], Closure $closure = null): void
+    public function eagerlyResult($result, $relation, $subRelation = '', $closure = null)
     {
         $localKey   = $this->localKey;
         $foreignKey = $this->foreignKey;
@@ -226,17 +228,17 @@ class HasManyThrough extends Relation
      * @param  array   $where       关联预查询条件
      * @param  string  $key         关联键名
      * @param  string  $relation    关联名
-     * @param  array   $subRelation 子关联
+     * @param  string   $subRelation 子关联
      * @param  Closure $closure
      * @return array
      */
-    protected function eagerlyWhere(array $where, string $key, string $relation, array $subRelation = [], Closure $closure = null)
+    protected function eagerlyWhere(array $where, $key, $relation, $subRelation = '', $closure = null)
     {
         // 预载入关联查询 支持嵌套预载入
         $throughList = $this->through->where($where)->select();
         $keys        = $throughList->column($this->throughPk, $this->throughPk);
 
-        if ($closure) {
+        if ($closure instanceof Closure) {
             $closure($this->query);
         }
 
@@ -263,7 +265,7 @@ class HasManyThrough extends Relation
      * @param  string  $name 统计字段别名
      * @return integer
      */
-    public function relationCount(Model $result, Closure $closure, string $aggregate = 'count', string $field = '*', string &$name = null)
+    public function relationCount($result, $closure, $aggregate = 'count', $field = '*', &$name = null)
     {
         $localKey = $this->localKey;
 
@@ -271,7 +273,7 @@ class HasManyThrough extends Relation
             return 0;
         }
 
-        if ($closure) {
+        if ($closure instanceof Closure) {
             $return = $closure($this->query);
             if ($return && is_string($return)) {
                 $name = $return;
@@ -305,9 +307,9 @@ class HasManyThrough extends Relation
      * @param  string  $name 统计字段别名
      * @return string
      */
-    public function getRelationCountQuery(Closure $closure = null, string $aggregate = 'count', string $field = '*', string &$name = null): string
+    public function getRelationCountQuery($closure = null, $aggregate = 'count', $field = '*', &$name = null)
     {
-        if ($closure) {
+        if ($closure instanceof Closure) {
             $return = $closure($this->query);
             if ($return && is_string($return)) {
                 $name = $return;

@@ -375,7 +375,7 @@ class Url
                 continue;
             }
 
-            if (!in_array($this->app['request']->port(), [80, 443])) {
+            if (!in_array($this->app['request']->port(), [80, 443]) && !$this->app['request']->isCli()) {
                 $domain .= ':' . $this->app['request']->port();
             }
 

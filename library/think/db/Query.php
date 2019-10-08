@@ -133,7 +133,24 @@ class Query
      */
     public function newQuery()
     {
-        return new static($this->connection);
+        $query = new static($this->connection);
+        if ($this->model) {
+            $query->model($this->model);
+        }
+        if (isset($this->options['table'])) {
+            $query->table($this->options['table']);
+        } else {
+            $query->name($this->name);
+        }
+
+        if (isset($this->options['json'])) {
+            $query->json($this->options['json'], $this->options['json_assoc']);
+        }
+        if (isset($this->options['field_type'])) {
+            $query->setJsonFieldType($this->options['field_type']);
+        }
+
+        return $query;
     }
 
     /**
@@ -2469,7 +2486,7 @@ class Query
         if (is_array($value)) {
             $this->bind = array_merge($this->bind, $value);
         } else {
-            $name = $name ?: 'ThinkBind_' . (count($this->bind) + 1) . '_';
+            $name = $name ?: 'ThinkBind_' . (count($this->bind) + 1) . '_' . mt_rand() . '_';
 
             $this->bind[$name] = [$value, $type];
             return $name;

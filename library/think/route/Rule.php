@@ -655,7 +655,7 @@ abstract class Rule
             if (!isset($header['Access-Control-Allow-Origin'])) {
                 $httpOrigin = $request->header('origin');
 
-                if ($httpOrigin && strpos(config('cookie.domain'), $httpOrigin)) {
+                if ($httpOrigin && strpos($httpOrigin, config('cookie.domain'))) {
                     $header['Access-Control-Allow-Origin'] = $httpOrigin;
                 } else {
                     $header['Access-Control-Allow-Origin'] = '*';

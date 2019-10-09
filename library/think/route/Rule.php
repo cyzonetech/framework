@@ -190,7 +190,7 @@ abstract class Rule
     /**
      * 获取变量规则定义
      * @access public
-     * @param  string  $name 变量名
+     * @param  string $name 变量名
      * @return mixed
      */
     public function getPattern($name = '')
@@ -205,7 +205,7 @@ abstract class Rule
     /**
      * 获取路由参数
      * @access public
-     * @param  string  $name 变量名
+     * @param  string $name 变量名
      * @return mixed
      */
     public function getConfig($name = '')
@@ -216,7 +216,7 @@ abstract class Rule
     /**
      * 获取路由参数定义
      * @access public
-     * @param  string  $name 参数名
+     * @param  string $name 参数名
      * @return mixed
      */
     public function getOption($name = '')
@@ -231,8 +231,8 @@ abstract class Rule
     /**
      * 注册路由参数
      * @access public
-     * @param  string|array  $name  参数名
-     * @param  mixed         $value 值
+     * @param  string|array $name 参数名
+     * @param  mixed $value 值
      * @return $this
      */
     public function option($name, $value = '')
@@ -249,8 +249,8 @@ abstract class Rule
     /**
      * 注册变量规则
      * @access public
-     * @param  string|array  $name 变量名
-     * @param  string        $rule 变量规则
+     * @param  string|array $name 变量名
+     * @param  string $rule 变量规则
      * @return $this
      */
     public function pattern($name, $rule = '')
@@ -267,7 +267,7 @@ abstract class Rule
     /**
      * 设置标识
      * @access public
-     * @param  string  $name 标识名
+     * @param  string $name 标识名
      * @return $this
      */
     public function name($name)
@@ -280,7 +280,7 @@ abstract class Rule
     /**
      * 设置变量
      * @access public
-     * @param  array  $vars 变量
+     * @param  array $vars 变量
      * @return $this
      */
     public function vars($vars)
@@ -293,7 +293,7 @@ abstract class Rule
     /**
      * 设置路由请求类型
      * @access public
-     * @param  string     $method
+     * @param  string $method
      * @return $this
      */
     public function method($method)
@@ -304,7 +304,7 @@ abstract class Rule
     /**
      * 设置路由前置行为
      * @access public
-     * @param  array|\Closure    $before
+     * @param  array|\Closure $before
      * @return $this
      */
     public function before($before)
@@ -315,7 +315,7 @@ abstract class Rule
     /**
      * 设置路由后置行为
      * @access public
-     * @param  array|\Closure     $after
+     * @param  array|\Closure $after
      * @return $this
      */
     public function after($after)
@@ -326,7 +326,7 @@ abstract class Rule
     /**
      * 检查后缀
      * @access public
-     * @param  string     $ext
+     * @param  string $ext
      * @return $this
      */
     public function ext($ext = '')
@@ -337,7 +337,7 @@ abstract class Rule
     /**
      * 检查禁止后缀
      * @access public
-     * @param  string     $ext
+     * @param  string $ext
      * @return $this
      */
     public function denyExt($ext = '')
@@ -348,7 +348,7 @@ abstract class Rule
     /**
      * 检查域名
      * @access public
-     * @param  string     $domain
+     * @param  string $domain
      * @return $this
      */
     public function domain($domain)
@@ -359,8 +359,8 @@ abstract class Rule
     /**
      * 设置参数过滤检查
      * @access public
-     * @param  string|array     $name
-     * @param  mixed            $value
+     * @param  string|array $name
+     * @param  mixed $value
      * @return $this
      */
     public function filter($name, $value = null)
@@ -377,9 +377,9 @@ abstract class Rule
     /**
      * 绑定模型
      * @access public
-     * @param  array|string      $var  路由变量名 多个使用 & 分割
-     * @param  string|\Closure   $model 绑定模型类
-     * @param  bool              $exception 是否抛出异常
+     * @param  array|string $var 路由变量名 多个使用 & 分割
+     * @param  string|\Closure $model 绑定模型类
+     * @param  bool $exception 是否抛出异常
      * @return $this
      */
     public function model($var, $model = null, $exception = true)
@@ -400,7 +400,7 @@ abstract class Rule
     /**
      * 附加路由隐式参数
      * @access public
-     * @param  array     $append
+     * @param  array $append
      * @return $this
      */
     public function append(array $append = [])
@@ -417,10 +417,10 @@ abstract class Rule
     /**
      * 绑定验证
      * @access public
-     * @param  mixed    $validate 验证器类
-     * @param  string   $scene 验证场景
-     * @param  array    $message 验证提示
-     * @param  bool     $batch 批量验证
+     * @param  mixed $validate 验证器类
+     * @param  string $scene 验证场景
+     * @param  array $message 验证提示
+     * @param  bool $batch 批量验证
      * @return $this
      */
     public function validate($validate, $scene = null, $message = [], $batch = false)
@@ -433,7 +433,7 @@ abstract class Rule
     /**
      * 绑定Response对象
      * @access public
-     * @param  mixed     $response
+     * @param  mixed $response
      * @return $this
      */
     public function response($response)
@@ -445,8 +445,8 @@ abstract class Rule
     /**
      * 设置Response Header信息
      * @access public
-     * @param  string|array $name  参数名
-     * @param  string       $value 参数值
+     * @param  string|array $name 参数名
+     * @param  string $value 参数值
      * @return $this
      */
     public function header($header, $value = null)
@@ -463,8 +463,8 @@ abstract class Rule
     /**
      * 指定路由中间件
      * @access public
-     * @param  string|array|\Closure    $middleware
-     * @param  mixed                    $param
+     * @param  string|array|\Closure $middleware
+     * @param  mixed $param
      * @return $this
      */
     public function middleware($middleware, $param = null)
@@ -472,7 +472,7 @@ abstract class Rule
         if (is_null($param) && is_array($middleware)) {
             $this->option['middleware'] = $middleware;
         } else {
-            foreach ((array) $middleware as $item) {
+            foreach ((array)$middleware as $item) {
                 $this->option['middleware'][] = [$item, $param];
             }
         }
@@ -483,7 +483,7 @@ abstract class Rule
     /**
      * 设置路由缓存
      * @access public
-     * @param  array|string     $cache
+     * @param  array|string $cache
      * @return $this
      */
     public function cache($cache)
@@ -494,7 +494,7 @@ abstract class Rule
     /**
      * 检查URL分隔符
      * @access public
-     * @param  bool     $depr
+     * @param  bool $depr
      * @return $this
      */
     public function depr($depr)
@@ -505,7 +505,7 @@ abstract class Rule
     /**
      * 是否合并额外参数
      * @access public
-     * @param  bool     $merge
+     * @param  bool $merge
      * @return $this
      */
     public function mergeExtraVars($merge = true)
@@ -516,7 +516,7 @@ abstract class Rule
     /**
      * 设置需要合并的路由参数
      * @access public
-     * @param  array     $option
+     * @param  array $option
      * @return $this
      */
     public function mergeOptions($option = [])
@@ -528,7 +528,7 @@ abstract class Rule
     /**
      * 检查是否为HTTPS请求
      * @access public
-     * @param  bool     $https
+     * @param  bool $https
      * @return $this
      */
     public function https($https = true)
@@ -539,7 +539,7 @@ abstract class Rule
     /**
      * 检查是否为AJAX请求
      * @access public
-     * @param  bool     $ajax
+     * @param  bool $ajax
      * @return $this
      */
     public function ajax($ajax = true)
@@ -550,7 +550,7 @@ abstract class Rule
     /**
      * 检查是否为PJAX请求
      * @access public
-     * @param  bool     $pjax
+     * @param  bool $pjax
      * @return $this
      */
     public function pjax($pjax = true)
@@ -561,7 +561,7 @@ abstract class Rule
     /**
      * 检查是否为手机访问
      * @access public
-     * @param  bool     $mobile
+     * @param  bool $mobile
      * @return $this
      */
     public function mobile($mobile = true)
@@ -572,7 +572,7 @@ abstract class Rule
     /**
      * 当前路由到一个模板地址 当使用数组的时候可以传入模板变量
      * @access public
-     * @param  bool|array     $view
+     * @param  bool|array $view
      * @return $this
      */
     public function view($view = true)
@@ -583,7 +583,7 @@ abstract class Rule
     /**
      * 当前路由为重定向
      * @access public
-     * @param  bool   $redirect 是否为重定向
+     * @param  bool $redirect 是否为重定向
      * @return $this
      */
     public function redirect($redirect = true)
@@ -594,7 +594,7 @@ abstract class Rule
     /**
      * 设置路由完整匹配
      * @access public
-     * @param  bool     $match
+     * @param  bool $match
      * @return $this
      */
     public function completeMatch($match = true)
@@ -605,7 +605,7 @@ abstract class Rule
     /**
      * 是否去除URL最后的斜线
      * @access public
-     * @param  bool     $remove
+     * @param  bool $remove
      * @return $this
      */
     public function removeSlash($remove = true)
@@ -616,8 +616,8 @@ abstract class Rule
     /**
      * 设置是否允许跨域
      * @access public
-     * @param  bool     $allow
-     * @param  array    $header
+     * @param  bool $allow
+     * @param  array $header
      * @return $this
      */
     public function allowCrossDomain($allow = true, $header = [])
@@ -636,7 +636,7 @@ abstract class Rule
     /**
      * 检查OPTIONS请求
      * @access public
-     * @param  Request     $request
+     * @param  Request $request
      * @return Dispatch|void
      */
     protected function checkCrossDomain($request)
@@ -644,8 +644,8 @@ abstract class Rule
         if (!empty($this->option['cross_domain'])) {
             $header = [
                 'Access-Control-Allow-Credentials' => 'true',
-                'Access-Control-Allow-Methods'     => 'GET, POST, PATCH, PUT, DELETE',
-                'Access-Control-Allow-Headers'     => 'Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, X-Requested-With',
+                'Access-Control-Allow-Methods' => 'GET, POST, PATCH, PUT, DELETE',
+                'Access-Control-Allow-Headers' => 'Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, X-Requested-With',
             ];
 
             if (!empty($this->option['header'])) {
@@ -655,7 +655,7 @@ abstract class Rule
             if (!isset($header['Access-Control-Allow-Origin'])) {
                 $httpOrigin = $request->header('origin');
 
-                if ($httpOrigin && strpos(config('cookie.domain'), $httpOrigin)) {
+                if ($httpOrigin && strpos($httpOrigin, config('cookie.domain'))) {
                     $header['Access-Control-Allow-Origin'] = $httpOrigin;
                 } else {
                     $header['Access-Control-Allow-Origin'] = '*';
@@ -704,7 +704,7 @@ abstract class Rule
                 }
             }
 
-            $this->option     = array_merge($parentOption, $this->option);
+            $this->option = array_merge($parentOption, $this->option);
             $this->lockOption = true;
         }
 
@@ -714,12 +714,12 @@ abstract class Rule
     /**
      * 解析匹配到的规则路由
      * @access public
-     * @param  Request   $request 请求对象
-     * @param  string    $rule 路由规则
-     * @param  string    $route 路由地址
-     * @param  string    $url URL地址
-     * @param  array     $option 路由参数
-     * @param  array     $matches 匹配的变量
+     * @param  Request $request 请求对象
+     * @param  string $rule 路由规则
+     * @param  string $route 路由地址
+     * @param  string $url URL地址
+     * @param  array $option 路由参数
+     * @param  array $matches 匹配的变量
      * @return Dispatch
      */
     public function parseRule($request, $rule, $route, $url, $option = [], $matches = [])
@@ -734,10 +734,10 @@ abstract class Rule
             $search = $replace = [];
 
             foreach ($matches as $key => $value) {
-                $search[]  = '<' . $key . '>';
+                $search[] = '<' . $key . '>';
                 $replace[] = $value;
 
-                $search[]  = ':' . $key;
+                $search[] = ':' . $key;
                 $replace[] = $value;
             }
 
@@ -746,11 +746,11 @@ abstract class Rule
 
         // 解析额外参数
         $count = substr_count($rule, '/');
-        $url   = array_slice(explode('|', $url), $count + 1);
+        $url = array_slice(explode('|', $url), $count + 1);
         $this->parseUrlParams($request, implode('|', $url), $matches);
 
-        $this->vars    = $matches;
-        $this->option  = $option;
+        $this->vars = $matches;
+        $this->option = $option;
         $this->doAfter = true;
 
         // 发起路由调度
@@ -760,14 +760,14 @@ abstract class Rule
     /**
      * 检查路由前置行为
      * @access protected
-     * @param  mixed   $before 前置行为
+     * @param  mixed $before 前置行为
      * @return mixed
      */
     protected function checkBefore($before)
     {
         $hook = Container::get('hook');
 
-        foreach ((array) $before as $behavior) {
+        foreach ((array)$before as $behavior) {
             $result = $hook->exec($behavior);
 
             if (false === $result) {
@@ -779,9 +779,9 @@ abstract class Rule
     /**
      * 发起路由调度
      * @access protected
-     * @param  Request   $request Request对象
-     * @param  mixed     $route  路由地址
-     * @param  array     $option 路由参数
+     * @param  Request $request Request对象
+     * @param  mixed $route 路由地址
+     * @param  array $option 路由参数
      * @return Dispatch
      */
     protected function dispatch($request, $route, $option)
@@ -813,15 +813,15 @@ abstract class Rule
     /**
      * 解析URL地址为 模块/控制器/操作
      * @access protected
-     * @param  Request   $request Request对象
-     * @param  string    $route 路由地址
+     * @param  Request $request Request对象
+     * @param  string $route 路由地址
      * @return CallbackDispatch
      */
     protected function dispatchMethod($request, $route)
     {
         list($path, $var) = $this->parseUrlPath($route);
 
-        $route  = str_replace('/', '@', implode('/', $path));
+        $route = str_replace('/', '@', implode('/', $path));
         $method = strpos($route, '@') ? explode('@', $route) : $route;
 
         return new CallbackDispatch($request, $this, $method, $var);
@@ -830,8 +830,8 @@ abstract class Rule
     /**
      * 解析URL地址为 模块/控制器/操作
      * @access protected
-     * @param  Request   $request Request对象
-     * @param  string    $route 路由地址
+     * @param  Request $request Request对象
+     * @param  string $route 路由地址
      * @return ControllerDispatch
      */
     protected function dispatchController($request, $route)
@@ -850,18 +850,18 @@ abstract class Rule
     /**
      * 解析URL地址为 模块/控制器/操作
      * @access protected
-     * @param  Request   $request Request对象
-     * @param  string    $route 路由地址
+     * @param  Request $request Request对象
+     * @param  string $route 路由地址
      * @return ModuleDispatch
      */
     protected function dispatchModule($request, $route)
     {
         list($path, $var) = $this->parseUrlPath($route);
 
-        $action     = array_pop($path);
+        $action = array_pop($path);
         $controller = !empty($path) ? array_pop($path) : null;
-        $module     = $this->getConfig('app_multi_module') && !empty($path) ? array_pop($path) : null;
-        $method     = $request->method();
+        $module = $this->getConfig('app_multi_module') && !empty($path) ? array_pop($path) : null;
+        $method = $request->method();
 
         if ($this->getConfig('use_action_prefix') && $this->router->getMethodPrefix($method)) {
             $prefix = $this->router->getMethodPrefix($method);
@@ -879,8 +879,8 @@ abstract class Rule
     /**
      * 路由检查
      * @access protected
-     * @param  array     $option 路由参数
-     * @param  Request   $request Request对象
+     * @param  array $option 路由参数
+     * @param  Request $request Request对象
      * @return bool
      */
     protected function checkOption($option, Request $request)
@@ -904,7 +904,8 @@ abstract class Rule
 
         // 伪静态后缀检测
         if ($request->url() != '/' && ((isset($option['ext']) && false === stripos('|' . $option['ext'] . '|', '|' . $request->ext() . '|'))
-            || (isset($option['deny_ext']) && false !== stripos('|' . $option['deny_ext'] . '|', '|' . $request->ext() . '|')))) {
+                || (isset($option['deny_ext']) && false !== stripos('|' . $option['deny_ext'] . '|', '|' . $request->ext() . '|')))
+        ) {
             return false;
         }
 
@@ -915,7 +916,8 @@ abstract class Rule
 
         // HTTPS检查
         if ((isset($option['https']) && $option['https'] && !$request->isSsl())
-            || (isset($option['https']) && !$option['https'] && $request->isSsl())) {
+            || (isset($option['https']) && !$option['https'] && $request->isSsl())
+        ) {
             return false;
         }
 
@@ -933,9 +935,9 @@ abstract class Rule
     /**
      * 解析URL地址中的参数Request对象
      * @access protected
-     * @param  Request   $request
-     * @param  string    $rule 路由规则
-     * @param  array     $var 变量
+     * @param  Request $request
+     * @param  string $rule 路由规则
+     * @param  array $var 变量
      * @return void
      */
     protected function parseUrlParams($request, $url, &$var = [])
@@ -954,7 +956,7 @@ abstract class Rule
     /**
      * 解析URL的pathinfo参数和变量
      * @access public
-     * @param  string    $url URL地址
+     * @param  string $url URL地址
      * @return array
      */
     public function parseUrlPath($url)
@@ -986,12 +988,12 @@ abstract class Rule
     /**
      * 生成路由的正则规则
      * @access protected
-     * @param  string    $rule 路由规则
-     * @param  array     $match 匹配的变量
-     * @param  array     $pattern   路由变量规则
-     * @param  array     $option    路由参数
-     * @param  bool      $completeMatch   路由是否完全匹配
-     * @param  string    $suffix   路由正则变量后缀
+     * @param  string $rule 路由规则
+     * @param  array $match 匹配的变量
+     * @param  array $pattern 路由变量规则
+     * @param  array $option 路由参数
+     * @param  bool $completeMatch 路由是否完全匹配
+     * @param  string $suffix 路由正则变量后缀
      * @return string
      */
     protected function buildRuleRegex($rule, $match, $pattern = [], $option = [], $completeMatch = false, $suffix = '')
@@ -1005,7 +1007,7 @@ abstract class Rule
             if (!empty($option['remove_slash'])) {
                 $rule = rtrim($rule, '/');
             } elseif (substr($rule, -1) == '/') {
-                $rule     = rtrim($rule, '/');
+                $rule = rtrim($rule, '/');
                 $hasSlash = true;
             }
         }
@@ -1023,20 +1025,20 @@ abstract class Rule
     /**
      * 生成路由变量的正则规则
      * @access protected
-     * @param  string    $name      路由变量
-     * @param  string    $pattern   变量规则
-     * @param  string    $suffix    路由正则变量后缀
+     * @param  string $name 路由变量
+     * @param  string $pattern 变量规则
+     * @param  string $suffix 路由正则变量后缀
      * @return string
      */
     protected function buildNameRegex($name, $pattern, $suffix)
     {
         $optional = '';
-        $slash    = substr($name, 0, 1);
+        $slash = substr($name, 0, 1);
 
         if (in_array($slash, ['/', '-'])) {
             $prefix = '\\' . $slash;
-            $name   = substr($name, 1);
-            $slash  = substr($name, 0, 1);
+            $name = substr($name, 1);
+            $slash = substr($name, 0, 1);
         } else {
             $prefix = '';
         }
@@ -1046,7 +1048,7 @@ abstract class Rule
         }
 
         if (strpos($name, '?')) {
-            $name     = substr($name, 1, -2);
+            $name = substr($name, 1, -2);
             $optional = '?';
         } elseif (strpos($name, '>')) {
             $name = substr($name, 1, -1);
@@ -1067,7 +1069,7 @@ abstract class Rule
     /**
      * 分析路由规则中的变量
      * @access protected
-     * @param  string    $rule 路由规则
+     * @param  string $rule 路由规则
      * @return array
      */
     protected function parseVar($rule)
@@ -1080,7 +1082,7 @@ abstract class Rule
                 $optional = false;
 
                 if (strpos($name, '?')) {
-                    $name     = substr($name, 1, -2);
+                    $name = substr($name, 1, -2);
                     $optional = true;
                 } else {
                     $name = substr($name, 1, -1);
@@ -1096,8 +1098,8 @@ abstract class Rule
     /**
      * 设置路由参数
      * @access public
-     * @param  string    $method     方法名
-     * @param  array     $args       调用参数
+     * @param  string $method 方法名
+     * @param  array $args 调用参数
      * @return $this
      */
     public function __call($method, $args)

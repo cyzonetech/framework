@@ -784,12 +784,12 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         $pk = $this->getPk();
 
         $where = [];
-        if (is_string($pk) && isset($this->data[$pk])) {
-            $where[] = [$pk, '=', $this->data[$pk]];
+        if (is_string($pk) && isset($this->_data[$pk])) {
+            $where[] = [$pk, '=', $this->_data[$pk]];
         } elseif (is_array($pk)) {
             foreach ($pk as $field) {
-                if (isset($this->data[$field])) {
-                    $where[] = [$field, '=', $this->data[$field]];
+                if (isset($this->_data[$field])) {
+                    $where[] = [$field, '=', $this->_data[$field]];
                 }
             }
         }

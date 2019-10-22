@@ -368,6 +368,7 @@ class Url
     // 匹配路由地址
     public function getRuleUrl($rule, &$vars = [], $allowDomain = '')
     {
+        $port = $this->app['request']->port();
         foreach ($rule as $item) {
             list($url, $pattern, $domain, $suffix, $method) = $item;
 
@@ -375,8 +376,8 @@ class Url
                 continue;
             }
 
-            if (!in_array($this->app['request']->port(), [80, 443]) && !$this->app['request']->isCli()) {
-                $domain .= ':' . $this->app['request']->port();
+            if ($port && !in_array($port, [80, 443])) {
+                $domain .= ':' . $port;
             }
 
             if (empty($pattern)) {

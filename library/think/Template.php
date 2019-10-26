@@ -219,6 +219,13 @@ class Template
             if (!$this->checkCache($cacheFile)) {
                 // 缓存无效 重新模板编译
                 $content = file_get_contents($template);
+                // 自动加载模板目录下namespace.html文件
+                if ($this->config['view_base']) {
+                    $namespaceFile = $this->config['view_base'] . DIRECTORY_SEPARATOR . 'namespace.' . $this->config['view_suffix'];
+                    if (file_exists($namespaceFile)) {
+                        $content = '{include file="namespace"}' . $content;
+                    }
+                }
                 $this->compiler($content, $cacheFile);
             }
 

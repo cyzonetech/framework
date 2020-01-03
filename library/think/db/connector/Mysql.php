@@ -185,7 +185,7 @@ class Mysql extends Connection
             return false;
         }
 
-        $this->execute("XA START '$xid'");
+        $this->linkID->exec("XA START '$xid'");
     }
 
     /**
@@ -197,8 +197,8 @@ class Mysql extends Connection
     public function prepareXa($xid)
     {
         $this->initConnect(true);
-        $this->execute("XA END '$xid'");
-        $this->execute("XA PREPARE '$xid'");
+        $this->linkID->exec("XA END '$xid'");
+        $this->linkID->exec("XA PREPARE '$xid'");
     }
 
     /**
@@ -210,7 +210,7 @@ class Mysql extends Connection
     public function commitXa($xid)
     {
         $this->initConnect(true);
-        $this->execute("XA COMMIT '$xid'");
+        $this->linkID->exec("XA COMMIT '$xid'");
     }
 
     /**
@@ -222,6 +222,6 @@ class Mysql extends Connection
     public function rollbackXa($xid)
     {
         $this->initConnect(true);
-        $this->execute("XA ROLLBACK '$xid'");
+        $this->linkID->exec("XA ROLLBACK '$xid'");
     }
 }

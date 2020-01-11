@@ -264,7 +264,7 @@ trait Attribute
      */
     public function getData($name = null)
     {
-        $name = Loader::parseName($name);
+        $name = is_null($name) ? null : Loader::parseName($name);
 
         if (is_null($name)) {
             return $this->_data;

@@ -34,61 +34,61 @@ class Query
      * 当前数据库连接对象
      * @var Connection
      */
-    protected $connection;
+    protected $_connection;
 
     /**
      * 当前模型对象
      * @var Model
      */
-    protected $model;
+    protected $_model;
 
     /**
      * 当前数据表名称（不含前缀）
      * @var string
      */
-    protected $name = '';
+    protected $_name = '';
 
     /**
      * 当前数据表主键
      * @var string|array
      */
-    protected $pk;
+    protected $_pk;
 
     /**
      * 当前数据表前缀
      * @var string
      */
-    protected $prefix = '';
+    protected $_prefix = '';
 
     /**
      * 当前查询参数
      * @var array
      */
-    protected $options = [];
+    protected $_options = [];
 
     /**
      * 当前参数绑定
      * @var array
      */
-    protected $bind = [];
+    protected $_bind = [];
 
     /**
      * 事件回调
      * @var array
      */
-    private static $event = [];
+    private static $_event = [];
 
     /**
      * 扩展查询方法
      * @var array
      */
-    private static $extend = [];
+    private static $_extend = [];
 
     /**
      * 读取主库的表
      * @var array
      */
-    protected static $readMaster = [];
+    protected static $_readMaster = [];
 
     /**
      * 日期查询表达式
@@ -118,12 +118,12 @@ class Query
     public function __construct(Connection $connection = null)
     {
         if (is_null($connection)) {
-            $this->connection = Db::connect();
+            $this->_connection = Db::connect();
         } else {
-            $this->connection = $connection;
+            $this->_connection = $connection;
         }
 
-        $this->prefix = $this->connection->getConfig('prefix');
+        $this->_prefix = $this->_connection->getConfig('prefix');
     }
 
     /**
@@ -133,21 +133,21 @@ class Query
      */
     public function newQuery()
     {
-        $query = new static($this->connection);
-        if ($this->model) {
-            $query->model($this->model);
+        $query = new static($this->_connection);
+        if ($this->_model) {
+            $query->model($this->_model);
         }
-        if (isset($this->options['table'])) {
-            $query->table($this->options['table']);
+        if (isset($this->_options['table'])) {
+            $query->table($this->_options['table']);
         } else {
-            $query->name($this->name);
+            $query->name($this->_name);
         }
 
-        if (isset($this->options['json'])) {
-            $query->json($this->options['json'], $this->options['json_assoc']);
+        if (isset($this->_options['json'])) {
+            $query->json($this->_options['json'], $this->_options['json_assoc']);
         }
-        if (isset($this->options['field_type'])) {
-            $query->setJsonFieldType($this->options['field_type']);
+        if (isset($this->_options['field_type'])) {
+            $query->setJsonFieldType($this->_options['field_type']);
         }
 
         return $query;
@@ -164,12 +164,12 @@ class Query
      */
     public function __call($method, $args)
     {
-        if (isset(self::$extend[strtolower($method)])) {
+        if (isset(self::$_extend[strtolower($method)])) {
             // 调用扩展查询方法
             array_unshift($args, $this);
 
             return Container::getInstance()
-                ->invoke(self::$extend[strtolower($method)], $args);
+                ->invoke(self::$_extend[strtolower($method)], $args);
         } elseif (strtolower(substr($method, 0, 5)) == 'getby') {
             // 根据某个字段获取记录
             $field = Loader::parseName(substr($method, 5));
@@ -186,15 +186,15 @@ class Query
             $name = Loader::parseName(substr($method, 5));
             array_unshift($args, $name);
             return call_user_func_array([$this, 'where'], $args);
-        } elseif ($this->model && method_exists($this->model, 'scope' . $method)) {
+        } elseif ($this->_model && method_exists($this->_model, 'scope' . $method)) {
             // 动态调用命名范围
             $method = 'scope' . $method;
             array_unshift($args, $this);
 
-            call_user_func_array([$this->model, $method], $args);
+            call_user_func_array([$this->_model, $method], $args);
             return $this;
         } else {
-            throw new Exception('method not exist:' . ($this->model ? get_class($this->model) : static::class) . '->' . $method);
+            throw new Exception('method not exist:' . ($this->_model ? get_class($this->_model) : static::class) . '->' . $method);
         }
     }
 
@@ -209,23 +209,23 @@ class Query
     {
         if (is_array($method)) {
             foreach ($method as $key => $val) {
-                self::$extend[strtolower($key)] = $val;
+                self::$_extend[strtolower($key)] = $val;
             }
         } else {
-            self::$extend[strtolower($method)] = $callback;
+            self::$_extend[strtolower($method)] = $callback;
         }
     }
 
     /**
      * 设置当前的数据库Connection对象
      * @access public
-     * @param  Connection      $connection
+     * @param  Connection      $_connection
      * @return $this
      */
-    public function setConnection(Connection $connection)
+    public function setConnection(Connection $_connection)
     {
-        $this->connection = $connection;
-        $this->prefix     = $this->connection->getConfig('prefix');
+        $this->_connection = $_connection;
+        $this->_prefix     = $this->_connection->getConfig('prefix');
 
         return $this;
     }
@@ -237,7 +237,7 @@ class Query
      */
     public function getConnection()
     {
-        return $this->connection;
+        return $this->_connection;
     }
 
     /**
@@ -248,7 +248,7 @@ class Query
      */
     public function model(Model $model)
     {
-        $this->model = $model;
+        $this->_model = $model;
         return $this;
     }
 
@@ -259,7 +259,7 @@ class Query
      */
     public function getModel()
     {
-        return $this->model ? $this->model->setQuery($this) : null;
+        return $this->_model ? $this->_model->setQuery($this) : null;
     }
 
     /**
@@ -272,7 +272,7 @@ class Query
     {
         $table = $all ? '*' : $this->getTable();
 
-        static::$readMaster[$table] = true;
+        static::$_readMaster[$table] = true;
 
         return $this;
     }
@@ -285,7 +285,7 @@ class Query
      */
     public function name($name)
     {
-        $this->name = $name;
+        $this->_name = $name;
         return $this;
     }
 
@@ -296,7 +296,7 @@ class Query
      */
     public function getName()
     {
-        return $this->name ?: $this->model->getName();
+        return $this->_name ?: $this->_model->getName();
     }
 
     /**
@@ -307,13 +307,13 @@ class Query
      */
     public function getTable($name = '')
     {
-        if (empty($name) && isset($this->options['table'])) {
-            return $this->options['table'];
+        if (empty($name) && isset($this->_options['table'])) {
+            return $this->_options['table'];
         }
 
-        $name = $name ?: $this->name;
+        $name = $name ?: $this->_name;
 
-        return $this->prefix . Loader::parseName($name);
+        return $this->_prefix . Loader::parseName($name);
     }
 
     /**
@@ -329,7 +329,7 @@ class Query
      */
     public function query($sql, $bind = [], $master = false, $pdo = false)
     {
-        return $this->connection->query($sql, $bind, $master, $pdo);
+        return $this->_connection->query($sql, $bind, $master, $pdo);
     }
 
     /**
@@ -343,7 +343,7 @@ class Query
      */
     public function execute($sql, $bind = [])
     {
-        return $this->connection->execute($sql, $bind, $this);
+        return $this->_connection->execute($sql, $bind, $this);
     }
 
     /**
@@ -354,7 +354,7 @@ class Query
      */
     public function listen($callback)
     {
-        $this->connection->listen($callback);
+        $this->_connection->listen($callback);
     }
 
     /**
@@ -365,7 +365,7 @@ class Query
      */
     public function getLastInsID($sequence = null)
     {
-        return $this->connection->getLastInsID($sequence);
+        return $this->_connection->getLastInsID($sequence);
     }
 
     /**
@@ -375,7 +375,7 @@ class Query
      */
     public function getNumRows()
     {
-        return $this->connection->getNumRows();
+        return $this->_connection->getNumRows();
     }
 
     /**
@@ -385,7 +385,7 @@ class Query
      */
     public function getLastSql()
     {
-        return $this->connection->getLastSql();
+        return $this->_connection->getLastSql();
     }
 
     /**
@@ -452,7 +452,7 @@ class Query
      */
     public function transaction($callback)
     {
-        return $this->connection->transaction($callback);
+        return $this->_connection->transaction($callback);
     }
 
     /**
@@ -462,7 +462,7 @@ class Query
      */
     public function startTrans()
     {
-        $this->connection->startTrans();
+        $this->_connection->startTrans();
     }
 
     /**
@@ -473,7 +473,7 @@ class Query
      */
     public function commit()
     {
-        $this->connection->commit();
+        $this->_connection->commit();
     }
 
     /**
@@ -484,7 +484,7 @@ class Query
      */
     public function rollback()
     {
-        $this->connection->rollback();
+        $this->_connection->rollback();
     }
 
     /**
@@ -496,7 +496,7 @@ class Query
      */
     public function batchQuery($sql = [])
     {
-        return $this->connection->batchQuery($sql);
+        return $this->_connection->batchQuery($sql);
     }
 
     /**
@@ -507,7 +507,7 @@ class Query
      */
     public function getConfig($name = '')
     {
-        return $this->connection->getConfig($name);
+        return $this->_connection->getConfig($name);
     }
 
     /**
@@ -519,10 +519,10 @@ class Query
     public function getTableFields($tableName = '')
     {
         if ('' == $tableName) {
-            $tableName = isset($this->options['table']) ? $this->options['table'] : $this->getTable();
+            $tableName = isset($this->_options['table']) ? $this->_options['table'] : $this->getTable();
         }
 
-        return $this->connection->getTableFields($tableName);
+        return $this->_connection->getTableFields($tableName);
     }
 
     /**
@@ -535,10 +535,10 @@ class Query
     public function getFieldsType($tableName = '', $field = null)
     {
         if ('' == $tableName) {
-            $tableName = isset($this->options['table']) ? $this->options['table'] : $this->getTable();
+            $tableName = isset($this->_options['table']) ? $this->_options['table'] : $this->getTable();
         }
 
-        return $this->connection->getFieldsType($tableName, $field);
+        return $this->_connection->getFieldsType($tableName, $field);
     }
 
     /**
@@ -593,7 +593,7 @@ class Query
             $tableName[] = 'SELECT * FROM ' . $this->getTable() . '_' . ($i + 1);
         }
 
-        return ['( ' . implode(" UNION ", $tableName) . ' )' => $this->name];
+        return ['( ' . implode(" UNION ", $tableName) . ' )' => $this->_name];
     }
 
     /**
@@ -607,7 +607,7 @@ class Query
     {
         $this->parseOptions();
 
-        return $this->connection->value($this, $field, $default);
+        return $this->_connection->value($this, $field, $default);
     }
 
     /**
@@ -621,7 +621,7 @@ class Query
     {
         $this->parseOptions();
 
-        return $this->connection->column($this, $field, $key);
+        return $this->_connection->column($this, $field, $key);
     }
 
     /**
@@ -636,9 +636,9 @@ class Query
     {
         $this->parseOptions();
 
-        $result = $this->connection->aggregate($this, $aggregate, $field);
+        $result = $this->_connection->aggregate($this, $aggregate, $field);
 
-        if (!empty($this->options['fetch_sql'])) {
+        if (!empty($this->_options['fetch_sql'])) {
             return $result;
         } elseif ($force) {
             $result = (float) $result;
@@ -655,12 +655,12 @@ class Query
      */
     public function count($field = '*')
     {
-        if (!empty($this->options['group'])) {
+        if (!empty($this->_options['group'])) {
             // 支持GROUP
             $options = $this->getOptions();
             $subSql  = $this->options($options)
                 ->field('count(' . $field . ') AS think_count')
-                ->bind($this->bind)
+                ->bind($this->_bind)
                 ->buildSql();
 
             $query = $this->newQuery()->table([$subSql => '_group_count_']);
@@ -753,7 +753,7 @@ class Query
      */
     public function setInc($field, $step = 1, $lazyTime = 0)
     {
-        $condition = !empty($this->options['where']) ? $this->options['where'] : [];
+        $condition = !empty($this->_options['where']) ? $this->_options['where'] : [];
 
         if (empty($condition)) {
             // 没有条件不做任何更新
@@ -767,7 +767,7 @@ class Query
 
             if (false === $step) {
                 // 清空查询条件
-                $this->options = [];
+                $this->_options = [];
                 return true;
             }
         }
@@ -786,7 +786,7 @@ class Query
      */
     public function setDec($field, $step = 1, $lazyTime = 0)
     {
-        $condition = !empty($this->options['where']) ? $this->options['where'] : [];
+        $condition = !empty($this->_options['where']) ? $this->_options['where'] : [];
 
         if (empty($condition)) {
             // 没有条件不做任何更新
@@ -800,7 +800,7 @@ class Query
 
             if (false === $step) {
                 // 清空查询条件
-                $this->options = [];
+                $this->_options = [];
                 return true;
             }
 
@@ -867,7 +867,7 @@ class Query
             if ($bind) {
                 $this->bindParams($condition, $bind);
             }
-            $this->options['join'][] = [$table, strtoupper($type), $condition];
+            $this->_options['join'][] = [$table, strtoupper($type), $condition];
         }
 
         return $this;
@@ -932,7 +932,7 @@ class Query
                 // 使用子查询
                 $table = $join;
             } else {
-                $prefix = $this->prefix;
+                $prefix = $this->_prefix;
                 if (strpos($join, ' ')) {
                     // 使用别名
                     list($table, $alias) = explode(' ', $join);
@@ -969,12 +969,12 @@ class Query
             return $this;
         }
 
-        $this->options['union']['type'] = $all ? 'UNION ALL' : 'UNION';
+        $this->_options['union']['type'] = $all ? 'UNION ALL' : 'UNION';
 
         if (is_array($union)) {
-            $this->options['union'] = array_merge($this->options['union'], $union);
+            $this->_options['union'] = array_merge($this->_options['union'], $union);
         } else {
-            $this->options['union'][] = $union;
+            $this->_options['union'][] = $union;
         }
 
         return $this;
@@ -1006,7 +1006,7 @@ class Query
         if (empty($field)) {
             return $this;
         } elseif ($field instanceof Expression) {
-            $this->options['field'][] = $field;
+            $this->_options['field'][] = $field;
             return $this;
         }
 
@@ -1041,11 +1041,11 @@ class Query
             }
         }
 
-        if (isset($this->options['field'])) {
-            $field = array_merge((array) $this->options['field'], $field);
+        if (isset($this->_options['field'])) {
+            $field = array_merge((array) $this->_options['field'], $field);
         }
 
-        $this->options['field'] = array_unique($field);
+        $this->_options['field'] = array_unique($field);
 
         return $this;
     }
@@ -1058,7 +1058,7 @@ class Query
      */
     public function fieldRaw($field)
     {
-        $this->options['field'][] = $this->raw($field);
+        $this->_options['field'][] = $this->raw($field);
 
         return $this;
     }
@@ -1073,9 +1073,9 @@ class Query
     public function data($field, $value = null)
     {
         if (is_array($field)) {
-            $this->options['data'] = isset($this->options['data']) ? array_merge($this->options['data'], $field) : $field;
+            $this->_options['data'] = isset($this->_options['data']) ? array_merge($this->_options['data'], $field) : $field;
         } else {
-            $this->options['data'][$field] = $value;
+            $this->_options['data'][$field] = $value;
         }
 
         return $this;
@@ -1152,7 +1152,7 @@ class Query
      */
     public function view($join, $field = true, $on = null, $type = 'INNER')
     {
-        $this->options['view'] = true;
+        $this->_options['view'] = true;
 
         if (is_array($join) && key($join) === 0) {
             foreach ($join as $key => $val) {
@@ -1173,7 +1173,7 @@ class Query
                     if (is_numeric($key)) {
                         $fields[] = $alias . '.' . $val;
 
-                        $this->options['map'][$val] = $alias . '.' . $val;
+                        $this->_options['map'][$val] = $alias . '.' . $val;
                     } else {
                         if (preg_match('/[,=\.\'\"\(\s]/', $key)) {
                             $name = $key;
@@ -1183,7 +1183,7 @@ class Query
 
                         $fields[] = $name . ' AS ' . $val;
 
-                        $this->options['map'][$val] = $name;
+                        $this->_options['map'][$val] = $name;
                     }
                 }
             }
@@ -1210,7 +1210,7 @@ class Query
      */
     public function partition($data, $field, $rule = [])
     {
-        $this->options['table'] = $this->getPartitionTableName($data, $field, $rule);
+        $this->_options['table'] = $this->getPartitionTableName($data, $field, $rule);
 
         return $this;
     }
@@ -1297,7 +1297,7 @@ class Query
             $condition = $this->raw($condition);
         }
 
-        $this->options['where'][strtoupper($logic)][] = ['', 'EXISTS', $condition];
+        $this->_options['where'][strtoupper($logic)][] = ['', 'EXISTS', $condition];
         return $this;
     }
 
@@ -1314,7 +1314,7 @@ class Query
             $condition = $this->raw($condition);
         }
 
-        $this->options['where'][strtoupper($logic)][] = ['', 'NOT EXISTS', $condition];
+        $this->_options['where'][strtoupper($logic)][] = ['', 'NOT EXISTS', $condition];
         return $this;
     }
 
@@ -1432,7 +1432,7 @@ class Query
     public function useSoftDelete($field, $condition = null)
     {
         if ($field) {
-            $this->options['soft_delete'] = [$field, $condition];
+            $this->_options['soft_delete'] = [$field, $condition];
         }
 
         return $this;
@@ -1453,7 +1453,7 @@ class Query
             $this->bindParams($where, $bind);
         }
 
-        $this->options['where'][$logic][] = [$field, 'EXP', $this->raw($where)];
+        $this->_options['where'][$logic][] = [$field, 'EXP', $this->raw($where)];
 
         return $this;
     }
@@ -1472,7 +1472,7 @@ class Query
             $this->bindParams($where, $bind);
         }
 
-        $this->options['where'][$logic][] = $this->raw($where);
+        $this->_options['where'][$logic][] = $this->raw($where);
 
         return $this;
     }
@@ -1527,7 +1527,7 @@ class Query
     protected function parseWhereExp($logic, $field, $op, $condition, array $param = [], $strict = false)
     {
         if ($field instanceof $this) {
-            $this->options['where'] = $field->getOptions('where');
+            $this->_options['where'] = $field->getOptions('where');
             $this->bind($field->getBind(false));
             return $this;
         }
@@ -1538,8 +1538,8 @@ class Query
             $field = $field->parse();
         }
 
-        if (is_string($field) && !empty($this->options['via']) && false === strpos($field, '.')) {
-            $field = $this->options['via'] . '.' . $field;
+        if (is_string($field) && !empty($this->_options['via']) && false === strpos($field, '.')) {
+            $field = $this->_options['via'] . '.' . $field;
         }
 
         if ($field instanceof Expression) {
@@ -1564,7 +1564,7 @@ class Query
         }
 
         if (!empty($where)) {
-            $this->options['where'][$logic][] = $where;
+            $this->_options['where'][$logic][] = $where;
         }
 
         return $this;
@@ -1633,7 +1633,7 @@ class Query
         }
 
         if (!empty($where)) {
-            $this->options['where'][$logic] = isset($this->options['where'][$logic]) ? array_merge($this->options['where'][$logic], $where) : $where;
+            $this->_options['where'][$logic] = isset($this->_options['where'][$logic]) ? array_merge($this->_options['where'][$logic], $where) : $where;
         }
 
         return $this;
@@ -1650,10 +1650,10 @@ class Query
     {
         $logic = strtoupper($logic);
 
-        if (isset($this->options['where'][$logic])) {
-            foreach ($this->options['where'][$logic] as $key => $val) {
+        if (isset($this->_options['where'][$logic])) {
+            foreach ($this->_options['where'][$logic] as $key => $val) {
                 if (is_array($val) && $val[0] == $field) {
-                    unset($this->options['where'][$logic][$key]);
+                    unset($this->_options['where'][$logic][$key]);
                 }
             }
         }
@@ -1670,10 +1670,10 @@ class Query
     public function removeOption($option = true)
     {
         if (true === $option) {
-            $this->options = [];
-            $this->bind    = [];
-        } elseif (is_string($option) && isset($this->options[$option])) {
-            unset($this->options[$option]);
+            $this->_options = [];
+            $this->_bind    = [];
+        } elseif (is_string($option) && isset($this->_options[$option])) {
+            unset($this->_options[$option]);
         }
 
         return $this;
@@ -1723,7 +1723,7 @@ class Query
             list($offset, $length) = explode(',', $offset);
         }
 
-        $this->options['limit'] = intval($offset) . ($length ? ',' . intval($length) : '');
+        $this->_options['limit'] = intval($offset) . ($length ? ',' . intval($length) : '');
 
         return $this;
     }
@@ -1741,7 +1741,7 @@ class Query
             list($page, $listRows) = explode(',', $page);
         }
 
-        $this->options['page'] = [intval($page), intval($listRows)];
+        $this->_options['page'] = [intval($page), intval($listRows)];
 
         return $this;
     }
@@ -1793,9 +1793,9 @@ class Query
         if (!isset($total) && !$simple) {
             $options = $this->getOptions();
 
-            unset($this->options['order'], $this->options['limit'], $this->options['page'], $this->options['field']);
+            unset($this->_options['order'], $this->_options['limit'], $this->_options['page'], $this->_options['field']);
 
-            $bind    = $this->bind;
+            $bind    = $this->_bind;
             $total   = $this->count();
             $results = $this->options($options)->bind($bind)->page($page, $listRows)->select();
         } elseif ($simple) {
@@ -1855,7 +1855,7 @@ class Query
             }
         }
 
-        $this->options['table'] = $table;
+        $this->_options['table'] = $table;
 
         return $this;
     }
@@ -1868,7 +1868,7 @@ class Query
      */
     public function using($using)
     {
-        $this->options['using'] = $using;
+        $this->_options['using'] = $using;
         return $this;
     }
 
@@ -1884,13 +1884,13 @@ class Query
         if (empty($field)) {
             return $this;
         } elseif ($field instanceof Expression) {
-            $this->options['order'][] = $field;
+            $this->_options['order'][] = $field;
             return $this;
         }
 
         if (is_string($field)) {
-            if (!empty($this->options['via'])) {
-                $field = $this->options['via'] . '.' . $field;
+            if (!empty($this->_options['via'])) {
+                $field = $this->_options['via'] . '.' . $field;
             }
 
             if (strpos($field, ',')) {
@@ -1898,25 +1898,25 @@ class Query
             } else {
                 $field = empty($order) ? $field : [$field => $order];
             }
-        } elseif (!empty($this->options['via'])) {
+        } elseif (!empty($this->_options['via'])) {
             foreach ($field as $key => $val) {
                 if (is_numeric($key)) {
-                    $field[$key] = $this->options['via'] . '.' . $val;
+                    $field[$key] = $this->_options['via'] . '.' . $val;
                 } else {
-                    $field[$this->options['via'] . '.' . $key] = $val;
+                    $field[$this->_options['via'] . '.' . $key] = $val;
                     unset($field[$key]);
                 }
             }
         }
 
-        if (!isset($this->options['order'])) {
-            $this->options['order'] = [];
+        if (!isset($this->_options['order'])) {
+            $this->_options['order'] = [];
         }
 
         if (is_array($field)) {
-            $this->options['order'] = array_merge($this->options['order'], $field);
+            $this->_options['order'] = array_merge($this->_options['order'], $field);
         } else {
-            $this->options['order'][] = $field;
+            $this->_options['order'][] = $field;
         }
 
         return $this;
@@ -1935,7 +1935,7 @@ class Query
             $this->bindParams($field, $bind);
         }
 
-        $this->options['order'][] = $this->raw($field);
+        $this->_options['order'][] = $this->raw($field);
 
         return $this;
     }
@@ -1953,7 +1953,7 @@ class Query
         if (!empty($values)) {
             $values['sort'] = $order;
 
-            $this->options['order'][$field] = $values;
+            $this->_options['order'][$field] = $values;
         }
 
         return $this;
@@ -1966,7 +1966,7 @@ class Query
      */
     public function orderRand()
     {
-        $this->options['order'][] = '[rand]';
+        $this->_options['order'][] = '[rand]';
         return $this;
     }
 
@@ -1987,7 +1987,7 @@ class Query
         }
 
         if (false !== $key) {
-            $this->options['cache'] = ['key' => $key, 'expire' => $expire, 'tag' => $tag];
+            $this->_options['cache'] = ['key' => $key, 'expire' => $expire, 'tag' => $tag];
         }
 
         return $this;
@@ -2001,7 +2001,7 @@ class Query
      */
     public function group($group)
     {
-        $this->options['group'] = $group;
+        $this->_options['group'] = $group;
         return $this;
     }
 
@@ -2013,7 +2013,7 @@ class Query
      */
     public function having($having)
     {
-        $this->options['having'] = $having;
+        $this->_options['having'] = $having;
         return $this;
     }
 
@@ -2025,8 +2025,8 @@ class Query
      */
     public function lock($lock = false)
     {
-        $this->options['lock']   = $lock;
-        $this->options['master'] = true;
+        $this->_options['lock']   = $lock;
+        $this->_options['master'] = true;
 
         return $this;
     }
@@ -2039,7 +2039,7 @@ class Query
      */
     public function distinct($distinct)
     {
-        $this->options['distinct'] = $distinct;
+        $this->_options['distinct'] = $distinct;
         return $this;
     }
 
@@ -2054,23 +2054,23 @@ class Query
         if (is_array($alias)) {
             foreach ($alias as $key => $val) {
                 if (false !== strpos($key, '__')) {
-                    $table = $this->connection->parseSqlTable($key);
+                    $table = $this->_connection->parseSqlTable($key);
                 } else {
                     $table = $key;
                 }
-                $this->options['alias'][$table] = $val;
+                $this->_options['alias'][$table] = $val;
             }
         } else {
-            if (isset($this->options['table'])) {
-                $table = is_array($this->options['table']) ? key($this->options['table']) : $this->options['table'];
+            if (isset($this->_options['table'])) {
+                $table = is_array($this->_options['table']) ? key($this->_options['table']) : $this->_options['table'];
                 if (false !== strpos($table, '__')) {
-                    $table = $this->connection->parseSqlTable($table);
+                    $table = $this->_connection->parseSqlTable($table);
                 }
             } else {
                 $table = $this->getTable();
             }
 
-            $this->options['alias'][$table] = $alias;
+            $this->_options['alias'][$table] = $alias;
         }
 
         return $this;
@@ -2084,7 +2084,7 @@ class Query
      */
     public function force($force)
     {
-        $this->options['force'] = $force;
+        $this->_options['force'] = $force;
         return $this;
     }
 
@@ -2096,7 +2096,7 @@ class Query
      */
     public function comment($comment)
     {
-        $this->options['comment'] = $comment;
+        $this->_options['comment'] = $comment;
         return $this;
     }
 
@@ -2108,7 +2108,7 @@ class Query
      */
     public function fetchSql($fetch = true)
     {
-        $this->options['fetch_sql'] = $fetch;
+        $this->_options['fetch_sql'] = $fetch;
         return $this;
     }
 
@@ -2120,7 +2120,7 @@ class Query
      */
     public function fetchPdo($pdo = true)
     {
-        $this->options['fetch_pdo'] = $pdo;
+        $this->_options['fetch_pdo'] = $pdo;
         return $this;
     }
 
@@ -2132,7 +2132,7 @@ class Query
      */
     public function fetchCollection($collection = true)
     {
-        $this->options['collection'] = $collection;
+        $this->_options['collection'] = $collection;
 
         return $this;
     }
@@ -2144,7 +2144,7 @@ class Query
      */
     public function master()
     {
-        $this->options['master'] = true;
+        $this->_options['master'] = true;
         return $this;
     }
 
@@ -2156,7 +2156,7 @@ class Query
      */
     public function strict($strict = true)
     {
-        $this->options['strict'] = $strict;
+        $this->_options['strict'] = $strict;
         return $this;
     }
 
@@ -2168,7 +2168,7 @@ class Query
      */
     public function failException($fail = true)
     {
-        $this->options['fail'] = $fail;
+        $this->_options['fail'] = $fail;
         return $this;
     }
 
@@ -2180,7 +2180,7 @@ class Query
      */
     public function sequence($sequence = null)
     {
-        $this->options['sequence'] = $sequence;
+        $this->_options['sequence'] = $sequence;
         return $this;
     }
 
@@ -2192,8 +2192,8 @@ class Query
      */
     public function hidden($hidden)
     {
-        if ($this->model) {
-            $this->options['hidden'] = $hidden;
+        if ($this->_model) {
+            $this->_options['hidden'] = $hidden;
             return $this;
         }
 
@@ -2208,7 +2208,7 @@ class Query
      */
     public function visible(array $visible)
     {
-        $this->options['visible'] = $visible;
+        $this->_options['visible'] = $visible;
         return $this;
     }
 
@@ -2220,7 +2220,7 @@ class Query
      */
     public function append(array $append = [])
     {
-        $this->options['append'] = $append;
+        $this->_options['append'] = $append;
         return $this;
     }
 
@@ -2234,9 +2234,9 @@ class Query
     public function withAttr($name, $callback = null)
     {
         if (is_array($name)) {
-            $this->options['with_attr'] = $name;
+            $this->_options['with_attr'] = $name;
         } else {
-            $this->options['with_attr'][$name] = $callback;
+            $this->_options['with_attr'][$name] = $callback;
         }
 
         return $this;
@@ -2251,8 +2251,8 @@ class Query
      */
     public function json(array $json = [], $assoc = false)
     {
-        $this->options['json']       = $json;
-        $this->options['json_assoc'] = $assoc;
+        $this->_options['json']       = $json;
+        $this->_options['json_assoc'] = $assoc;
         return $this;
     }
 
@@ -2264,7 +2264,7 @@ class Query
      */
     public function setJsonFieldType(array $type)
     {
-        $this->options['field_type'] = $type;
+        $this->_options['field_type'] = $type;
         return $this;
     }
 
@@ -2276,7 +2276,7 @@ class Query
      */
     public function getJsonFieldType($field)
     {
-        return isset($this->options['field_type'][$field]) ? $this->options['field_type'][$field] : null;
+        return isset($this->_options['field_type'][$field]) ? $this->_options['field_type'][$field] : null;
     }
 
     /**
@@ -2287,7 +2287,7 @@ class Query
      */
     public function allowEmpty($allowEmpty = true)
     {
-        $this->options['allow_empty'] = $allowEmpty;
+        $this->_options['allow_empty'] = $allowEmpty;
         return $this;
     }
 
@@ -2312,13 +2312,13 @@ class Query
             $scope = explode(',', $scope);
         }
 
-        if ($this->model) {
+        if ($this->_model) {
             // 检查模型类的查询范围方法
             foreach ($scope as $name) {
                 $method = 'scope' . trim($name);
 
-                if (method_exists($this->model, $method)) {
-                    call_user_func_array([$this->model, $method], $args);
+                if (method_exists($this->_model, $method)) {
+                    call_user_func_array([$this->_model, $method], $args);
                 }
             }
         }
@@ -2339,13 +2339,13 @@ class Query
         foreach ($fields as $key => $field) {
             if ($field instanceof \Closure) {
                 $field($this, isset($data[$key]) ? $data[$key] : null, $data, $prefix);
-            } elseif ($this->model) {
+            } elseif ($this->_model) {
                 // 检测搜索器
                 $fieldName = is_numeric($key) ? $field : $key;
                 $method    = 'search' . Loader::parseName($fieldName, 1) . 'Attr';
 
-                if (method_exists($this->model, $method)) {
-                    $this->model->$method($this, isset($data[$field]) ? $data[$field] : null, $data, $prefix);
+                if (method_exists($this->_model, $method)) {
+                    $this->_model->$method($this, isset($data[$field]) ? $data[$field] : null, $data, $prefix);
                 }
             }
         }
@@ -2361,7 +2361,7 @@ class Query
      */
     public function pk($pk)
     {
-        $this->pk = $pk;
+        $this->_pk = $pk;
         return $this;
     }
 
@@ -2463,10 +2463,10 @@ class Query
      */
     public function getPk($options = '')
     {
-        if (!empty($this->pk)) {
-            $pk = $this->pk;
+        if (!empty($this->_pk)) {
+            $pk = $this->_pk;
         } else {
-            $pk = $this->connection->getPk(is_array($options) && isset($options['table']) ? $options['table'] : $this->getTable());
+            $pk = $this->_connection->getPk(is_array($options) && isset($options['table']) ? $options['table'] : $this->getTable());
         }
 
         return $pk;
@@ -2483,11 +2483,11 @@ class Query
     public function bind($value, $type = PDO::PARAM_STR, $name = null)
     {
         if (is_array($value)) {
-            $this->bind = array_merge($this->bind, $value);
+            $this->_bind = array_merge($this->_bind, $value);
         } else {
-            $name = $name ?: 'ThinkBind_' . (count($this->bind) + 1) . '_' . mt_rand() . '_';
+            $name = $name ?: 'ThinkBind_' . (count($this->_bind) + 1) . '_' . mt_rand() . '_';
 
-            $this->bind[$name] = [$value, $type];
+            $this->_bind[$name] = [$value, $type];
             return $name;
         }
 
@@ -2502,7 +2502,7 @@ class Query
      */
     public function isBind($key)
     {
-        return isset($this->bind[$key]);
+        return isset($this->_bind[$key]);
     }
 
     /**
@@ -2514,7 +2514,7 @@ class Query
      */
     public function option($name, $value)
     {
-        $this->options[$name] = $value;
+        $this->_options[$name] = $value;
         return $this;
     }
 
@@ -2526,7 +2526,7 @@ class Query
      */
     protected function options(array $options)
     {
-        $this->options = $options;
+        $this->_options = $options;
         return $this;
     }
 
@@ -2539,9 +2539,9 @@ class Query
     public function getOptions($name = '')
     {
         if ('' === $name) {
-            return $this->options;
+            return $this->_options;
         }
-        return isset($this->options[$name]) ? $this->options[$name] : null;
+        return isset($this->_options[$name]) ? $this->_options[$name] : null;
     }
 
     /**
@@ -2553,7 +2553,7 @@ class Query
      */
     public function setOption($option, $value)
     {
-        $this->options[$option] = $value;
+        $this->_options[$option] = $value;
         return $this;
     }
 
@@ -2576,7 +2576,7 @@ class Query
         $first = true;
 
         /** @var Model $class */
-        $class = $this->model;
+        $class = $this->_model;
         foreach ($with as $key => $relation) {
             $closure = null;
 
@@ -2605,7 +2605,7 @@ class Query
 
         $this->via();
 
-        $this->options['with'] = $with;
+        $this->_options['with'] = $with;
 
         return $this;
     }
@@ -2630,7 +2630,7 @@ class Query
         $first = true;
 
         /** @var Model $class */
-        $class = $this->model;
+        $class = $this->_model;
         foreach ($with as $key => $relation) {
             $closure = null;
             $field   = true;
@@ -2661,7 +2661,7 @@ class Query
 
         $this->via();
 
-        $this->options['with_join'] = $with;
+        $this->_options['with_join'] = $with;
 
         return $this;
     }
@@ -2680,9 +2680,9 @@ class Query
         $relations = is_string($relation) ? explode(',', $relation) : $relation;
 
         if (!$subQuery) {
-            $this->options['with_count'][] = [$relations, $aggregate, $field];
+            $this->_options['with_count'][] = [$relations, $aggregate, $field];
         } else {
-            if (!isset($this->options['field'])) {
+            if (!isset($this->_options['field'])) {
                 $this->field('*');
             }
 
@@ -2699,7 +2699,7 @@ class Query
 
                 $relation = Loader::parseName($relation, 1, false);
 
-                $count = $this->model->$relation()->getRelationCountQuery($closure, $aggregate, $field, $aggregateField);
+                $count = $this->_model->$relation()->getRelationCountQuery($closure, $aggregate, $field, $aggregateField);
 
                 if (empty($aggregateField)) {
                     $aggregateField = Loader::parseName($relation) . '_' . $aggregate;
@@ -2789,7 +2789,7 @@ class Query
      */
     public function withField($field)
     {
-        $this->options['with_field'] = $field;
+        $this->_options['with_field'] = $field;
 
         return $this;
     }
@@ -2802,7 +2802,7 @@ class Query
      */
     public function via($via = '')
     {
-        $this->options['via'] = $via;
+        $this->_options['via'] = $via;
 
         return $this;
     }
@@ -2823,10 +2823,10 @@ class Query
             $relation = explode(',', $relation);
         }
 
-        if (isset($this->options['relation'])) {
-            $this->options['relation'] = array_merge($this->options['relation'], $relation);
+        if (isset($this->_options['relation'])) {
+            $this->_options['relation'] = array_merge($this->_options['relation'], $relation);
         } else {
-            $this->options['relation'] = $relation;
+            $this->_options['relation'] = $relation;
         }
 
         return $this;
@@ -2845,9 +2845,9 @@ class Query
     {
         $this->parseOptions();
 
-        $this->options['data'] = array_merge($this->options['data'], $data);
+        $this->_options['data'] = array_merge($this->_options['data'], $data);
 
-        return $this->connection->insert($this, $replace, $getLastInsID, $sequence);
+        return $this->_connection->insert($this, $replace, $getLastInsID, $sequence);
     }
 
     /**
@@ -2876,14 +2876,14 @@ class Query
         $this->parseOptions();
 
         if (empty($dataSet)) {
-            $dataSet = $this->options['data'];
+            $dataSet = $this->_options['data'];
         }
 
-        if (empty($limit) && !empty($this->options['limit'])) {
-            $limit = $this->options['limit'];
+        if (empty($limit) && !empty($this->_options['limit'])) {
+            $limit = $this->_options['limit'];
         }
 
-        return $this->connection->insertAll($this, $dataSet, $replace, $limit);
+        return $this->_connection->insertAll($this, $dataSet, $replace, $limit);
     }
 
     /**
@@ -2898,7 +2898,7 @@ class Query
     {
         $this->parseOptions();
 
-        return $this->connection->selectInsert($this, $fields, $table);
+        return $this->_connection->selectInsert($this, $fields, $table);
     }
 
     /**
@@ -2913,9 +2913,9 @@ class Query
     {
         $this->parseOptions();
 
-        $this->options['data'] = array_merge($this->options['data'], $data);
+        $this->_options['data'] = array_merge($this->_options['data'], $data);
 
-        return $this->connection->update($this);
+        return $this->_connection->update($this);
     }
 
     /**
@@ -2935,20 +2935,20 @@ class Query
             $this->parsePkWhere($data);
         }
 
-        if (!empty($this->options['soft_delete'])) {
+        if (!empty($this->_options['soft_delete'])) {
             // 软删除
-            list($field, $condition) = $this->options['soft_delete'];
+            list($field, $condition) = $this->_options['soft_delete'];
             if ($condition) {
-                unset($this->options['soft_delete']);
-                $this->options['data'] = [$field => $condition];
+                unset($this->_options['soft_delete']);
+                $this->_options['data'] = [$field => $condition];
 
-                return $this->connection->update($this);
+                return $this->_connection->update($this);
             }
         }
 
-        $this->options['data'] = $data;
+        $this->_options['data'] = $data;
 
-        return $this->connection->delete($this);
+        return $this->_connection->delete($this);
     }
 
     /**
@@ -2960,7 +2960,7 @@ class Query
     {
         $this->parseOptions();
 
-        return $this->connection->pdo($this);
+        return $this->_connection->pdo($this);
     }
 
     /**
@@ -2983,9 +2983,9 @@ class Query
             $this->parsePkWhere($data);
         }
 
-        $this->options['data'] = $data;
+        $this->_options['data'] = $data;
 
-        $connection = clone $this->connection;
+        $connection = clone $this->_connection;
 
         return $connection->cursor($this);
     }
@@ -3012,27 +3012,27 @@ class Query
 
         if (false === $data) {
             // 用于子查询 不查询只返回SQL
-            $this->options['fetch_sql'] = true;
+            $this->_options['fetch_sql'] = true;
         } elseif (!is_null($data)) {
             // 主键条件分析
             $this->parsePkWhere($data);
         }
 
-        $this->options['data'] = $data;
+        $this->_options['data'] = $data;
 
-        $resultSet = $this->connection->select($this);
+        $resultSet = $this->_connection->select($this);
 
-        if ($this->options['fetch_sql']) {
+        if ($this->_options['fetch_sql']) {
             return $resultSet;
         }
 
         // 返回结果处理
-        if (!empty($this->options['fail']) && count($resultSet) == 0) {
-            $this->throwNotFound($this->options);
+        if (!empty($this->_options['fail']) && count($resultSet) == 0) {
+            $this->throwNotFound($this->_options);
         }
 
         // 数据列表读取后的处理
-        if (!empty($this->model)) {
+        if (!empty($this->_model)) {
             // 生成模型对象
             $resultSet = $this->resultSetToModelCollection($resultSet);
         } else {
@@ -3050,22 +3050,22 @@ class Query
      */
     protected function resultSetToModelCollection(array $resultSet)
     {
-        if (!empty($this->options['collection']) && is_string($this->options['collection'])) {
-            $collection = $this->options['collection'];
+        if (!empty($this->_options['collection']) && is_string($this->_options['collection'])) {
+            $collection = $this->_options['collection'];
         }
 
         if (empty($resultSet)) {
-            return $this->model->toCollection([], isset($collection) ? $collection : null);
+            return $this->_model->toCollection([], isset($collection) ? $collection : null);
         }
 
         // 检查动态获取器
-        if (!empty($this->options['with_attr'])) {
-            foreach ($this->options['with_attr'] as $name => $val) {
+        if (!empty($this->_options['with_attr'])) {
+            foreach ($this->_options['with_attr'] as $name => $val) {
                 if (strpos($name, '.')) {
                     list($relation, $field) = explode('.', $name);
 
                     $withRelationAttr[$relation][$field] = $val;
-                    unset($this->options['with_attr'][$name]);
+                    unset($this->_options['with_attr'][$name]);
                 }
             }
         }
@@ -3074,17 +3074,17 @@ class Query
 
         foreach ($resultSet as $key => &$result) {
             // 数据转换为模型对象
-            $this->resultToModel($result, $this->options, true, $withRelationAttr);
+            $this->resultToModel($result, $this->_options, true, $withRelationAttr);
         }
 
-        if (!empty($this->options['with'])) {
+        if (!empty($this->_options['with'])) {
             // 预载入
-            $result->eagerlyResultSet($resultSet, $this->options['with'], $withRelationAttr);
+            $result->eagerlyResultSet($resultSet, $this->_options['with'], $withRelationAttr);
         }
 
-        if (!empty($this->options['with_join'])) {
+        if (!empty($this->_options['with_join'])) {
             // JOIN预载入
-            $result->eagerlyResultSet($resultSet, $this->options['with_join'], $withRelationAttr, true);
+            $result->eagerlyResultSet($resultSet, $this->_options['with_join'], $withRelationAttr, true);
         }
 
         // 模型数据集转换
@@ -3099,19 +3099,19 @@ class Query
      */
     protected function resultSet(&$resultSet)
     {
-        if (!empty($this->options['json'])) {
+        if (!empty($this->_options['json'])) {
             foreach ($resultSet as &$result) {
-                $this->jsonResult($result, $this->options['json'], true);
+                $this->jsonResult($result, $this->_options['json'], true);
             }
         }
 
-        if (!empty($this->options['with_attr'])) {
+        if (!empty($this->_options['with_attr'])) {
             foreach ($resultSet as &$result) {
-                $this->getResultAttr($result, $this->options['with_attr']);
+                $this->getResultAttr($result, $this->_options['with_attr']);
             }
         }
 
-        if (!empty($this->options['collection']) || 'collection' == $this->connection->getConfig('resultset_type')) {
+        if (!empty($this->_options['collection']) || 'collection' == $this->_connection->getConfig('resultset_type')) {
             // 返回Collection对象
             $resultSet = new Collection($resultSet);
         }
@@ -3142,11 +3142,11 @@ class Query
             $this->parsePkWhere($data);
         }
 
-        $this->options['data'] = $data;
+        $this->_options['data'] = $data;
 
-        $result = $this->connection->find($this);
+        $result = $this->_connection->find($this);
 
-        if ($this->options['fetch_sql']) {
+        if ($this->_options['fetch_sql']) {
             return $result;
         }
 
@@ -3155,9 +3155,9 @@ class Query
             return $this->resultToEmpty();
         }
 
-        if (!empty($this->model)) {
+        if (!empty($this->_model)) {
             // 返回模型对象
-            $this->resultToModel($result, $this->options);
+            $this->resultToModel($result, $this->_options);
         } else {
             $this->result($result);
         }
@@ -3175,10 +3175,10 @@ class Query
      */
     protected function resultToEmpty()
     {
-        if (!empty($this->options['allow_empty'])) {
-            return !empty($this->model) ? $this->model->newInstance([], $this->getModelUpdateCondition($this->options)) : [];
-        } elseif (!empty($this->options['fail'])) {
-            $this->throwNotFound($this->options);
+        if (!empty($this->_options['allow_empty'])) {
+            return !empty($this->_model) ? $this->_model->newInstance([], $this->getModelUpdateCondition($this->_options)) : [];
+        } elseif (!empty($this->_options['fail'])) {
+            $this->throwNotFound($this->_options);
         }
     }
 
@@ -3275,12 +3275,12 @@ class Query
      */
     protected function result(&$result)
     {
-        if (!empty($this->options['json'])) {
-            $this->jsonResult($result, $this->options['json'], true);
+        if (!empty($this->_options['json'])) {
+            $this->jsonResult($result, $this->_options['json'], true);
         }
 
-        if (!empty($this->options['with_attr'])) {
-            $this->getResultAttr($result, $this->options['with_attr']);
+        if (!empty($this->_options['with_attr'])) {
+            $this->getResultAttr($result, $this->_options['with_attr']);
         }
     }
 
@@ -3362,7 +3362,7 @@ class Query
             $this->jsonResult($result, $options['json'], $options['json_assoc'], $withRelationAttr);
         }
 
-        $result = $this->model->newInstance($result, $resultSet ? null : $this->getModelUpdateCondition($options));
+        $result = $this->_model->newInstance($result, $resultSet ? null : $this->getModelUpdateCondition($options));
 
         // 动态获取器
         if (!empty($options['with_attr'])) {
@@ -3422,8 +3422,8 @@ class Query
      */
     protected function throwNotFound($options = [])
     {
-        if (!empty($this->model)) {
-            $class = get_class($this->model);
+        if (!empty($this->_model)) {
+            $class = get_class($this->_model);
             throw new ModelNotFoundException('model data Not Found:' . $class, $class, $options);
         }
         $table = is_array($options['table']) ? key($options['table']) : $options['table'];
@@ -3494,7 +3494,7 @@ class Query
             unset($options['order']);
         }
 
-        $bind = $this->bind;
+        $bind = $this->_bind;
 
         if (is_array($column)) {
             $times = 1;
@@ -3546,9 +3546,9 @@ class Query
      */
     public function getBind($clear = true)
     {
-        $bind = $this->bind;
+        $bind = $this->_bind;
         if ($clear) {
-            $this->bind = [];
+            $this->_bind = [];
         }
 
         return $bind;
@@ -3625,12 +3625,12 @@ class Query
      */
     public function parsePkWhere($data)
     {
-        $pk = $this->getPk($this->options);
+        $pk = $this->getPk($this->_options);
         // 获取当前数据表
-        $table = is_array($this->options['table']) ? key($this->options['table']) : $this->options['table'];
+        $table = is_array($this->_options['table']) ? key($this->_options['table']) : $this->_options['table'];
 
-        if (!empty($this->options['alias'][$table])) {
-            $alias = $this->options['alias'][$table];
+        if (!empty($this->_options['alias'][$table])) {
+            $alias = $this->_options['alias'][$table];
         }
 
         if (is_string($pk)) {
@@ -3654,10 +3654,10 @@ class Query
         }
 
         if (!empty($where)) {
-            if (isset($this->options['where']['AND'])) {
-                $this->options['where']['AND'] = array_merge($this->options['where']['AND'], $where);
+            if (isset($this->_options['where']['AND'])) {
+                $this->_options['where']['AND'] = array_merge($this->_options['where']['AND'], $where);
             } else {
-                $this->options['where']['AND'] = $where;
+                $this->_options['where']['AND'] = $where;
             }
         }
 
@@ -3705,7 +3705,7 @@ class Query
             }
         }
 
-        if (isset(static::$readMaster['*']) || (is_string($options['table']) && isset(static::$readMaster[$options['table']]))) {
+        if (isset(static::$_readMaster['*']) || (is_string($options['table']) && isset(static::$_readMaster[$options['table']]))) {
             $options['master'] = true;
         }
 
@@ -3724,7 +3724,7 @@ class Query
             $options['limit']      = $offset . ',' . $listRows;
         }
 
-        $this->options = $options;
+        $this->_options = $options;
 
         return $options;
     }
@@ -3738,7 +3738,7 @@ class Query
      */
     public static function event($event, $callback)
     {
-        self::$event[$event] = $callback;
+        self::$_event[$event] = $callback;
     }
 
     /**
@@ -3751,8 +3751,8 @@ class Query
     {
         $result = false;
 
-        if (isset(self::$event[$event])) {
-            $result = Container::getInstance()->invoke(self::$event[$event], [$this]);
+        if (isset(self::$_event[$event])) {
+            $result = Container::getInstance()->invoke(self::$_event[$event], [$this]);
         }
 
         return $result;

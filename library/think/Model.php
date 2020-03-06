@@ -480,7 +480,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         $this->_origin = $this->_data;
         $this->_set    = [];
 
-        return true;
+        return $result;
     }
 
     /**
@@ -624,7 +624,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         $db->startTrans();
 
         try {
-            $db->where($where)
+            $result = $db->where($where)
                 ->strict(false)
                 ->field($allowFields)
                 ->update($data);
@@ -639,7 +639,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
             // 更新回调
             $this->trigger('after_update');
 
-            return true;
+            return $result;
         } catch (\Exception $e) {
             $db->rollback();
             throw $e;
@@ -700,7 +700,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
             // 新增回调
             $this->trigger('after_insert');
 
-            return true;
+            return $insertId ?? true;
         } catch (\Exception $e) {
             $db->rollback();
             throw $e;

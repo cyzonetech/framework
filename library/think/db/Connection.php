@@ -958,7 +958,7 @@ abstract class Connection
      * @param  string  $sequence     自增序列名
      * @return integer|string
      */
-    public function insert(Query $query, $replace = false, $getLastInsID = false, $sequence = null)
+    public function insert(Query $query, $replace = false, $getLastInsID = true, $sequence = null)
     {
         // 分析查询表达式
         $options = $query->getOptions();

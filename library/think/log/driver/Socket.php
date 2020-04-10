@@ -99,7 +99,7 @@ class Socket
         foreach ($log as $type => $val) {
             $trace[] = [
                 'type' => in_array($type, $this->config['expand_level']) ? 'group' : 'groupCollapsed',
-                'msg'  => '[ ' . $type . ' ]',
+                'msg' => '[ ' . $type . "[".count($val)."]" . ' ]',
                 'css'  => isset($this->css[$type]) ? $this->css[$type] : '',
             ];
 

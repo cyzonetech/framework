@@ -358,8 +358,6 @@ class App extends Container
         // 注册异常处理类
         if (isset($config['app']['exception_handle'][$module])) {
             Error::setExceptionHandler($config['app']['exception_handle'][$module]);
-        } else {
-            Error::setExceptionHandler($config['app']['exception_handle']['common'] ?? exception\Handle::class);
         }
 
         Db::init($config['database']);

@@ -247,8 +247,8 @@ class App extends Container
         }
 
         // 注册异常处理类
-        if ($this->config('app.exception_handle')) {
-            Error::setExceptionHandler($this->config('app.exception_handle'));
+        if ($this->config('app.exception_handle.common')) {
+            Error::setExceptionHandler($this->config('app.exception_handle.common'));
         }
 
         // 注册根命名空间
@@ -331,17 +331,14 @@ class App extends Container
             if (is_dir($path . 'config')) {
                 $dir = $path . 'config' . DIRECTORY_SEPARATOR;
             } elseif (is_dir($this->configPath . $module)) {
-                $dir = $this->configPath . $module . DIRECTORY_SEPARATOR;
+                $dir = $this->configPath . $module;
             }
 
             $files = isset($dir) ? scandir($dir) : [];
 
             foreach ($files as $file) {
                 if ('.' . pathinfo($file, PATHINFO_EXTENSION) === $this->configExt) {
-                    $this->config->load(
-                        $dir . $file,
-                        str_replace(DIRECTORY_SEPARATOR, '/', $module) . pathinfo($file, PATHINFO_FILENAME)
-                    );
+                    $this->config->load($dir . $file, $module . pathinfo($file, PATHINFO_FILENAME));
                 }
             }
         }
@@ -357,10 +354,12 @@ class App extends Container
     protected function containerConfigUpdate($module)
     {
         $config = $this->config->get();
-
+        $module = rtrim($module, DIRECTORY_SEPARATOR);
         // 注册异常处理类
-        if ($config['app']['exception_handle']) {
-            Error::setExceptionHandler($config['app']['exception_handle']);
+        if (isset($config['app']['exception_handle'][$module])) {
+            Error::setExceptionHandler($config['app']['exception_handle'][$module]);
+        } else {
+            Error::setExceptionHandler($config['app']['exception_handle']['common'] ?? exception\Handle::class);
         }
 
         Db::init($config['database']);

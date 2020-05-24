@@ -215,7 +215,7 @@ class File
             $message = json_encode($info, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
         } else {
             $now = $info['timestamp'];
-            unset($info['timestamp']);
+            unset($info['timestamp'], $info['type']);
 
             $message = implode(PHP_EOL, $info);
 

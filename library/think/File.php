@@ -397,7 +397,7 @@ class File extends SplFileObject
 
         /* 移动文件 */
         if ($this->isTest) {
-            rename($this->filename, $filename);
+            rename($this->filename, $filename) && chmod($filename, 0755);
         } elseif (!move_uploaded_file($this->filename, $filename)) {
             $this->error = 'upload write error';
             return false;

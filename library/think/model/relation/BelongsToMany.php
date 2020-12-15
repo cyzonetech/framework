@@ -698,15 +698,15 @@ class BelongsToMany extends Relation
      */
     protected function baseQuery()
     {
-        if (empty($this->baseQuery) && $this->parent->getData()) {
-            $pk    = $this->parent->getPk();
-            $table = $this->pivot->getTable();
-
-            $this->query
-                ->join([$table => 'pivot'], 'pivot.' . $this->foreignKey . '=' . $this->query->getTable() . '.' . $this->query->getPk())
-                ->where('pivot.' . $this->localKey, $this->parent->$pk);
-            $this->baseQuery = true;
-        }
+//        if (empty($this->baseQuery) && $this->parent->getData()) {
+//            $pk    = $this->parent->getPk();
+//            $table = $this->pivot->getTable();
+//
+//            $this->query
+//                ->join([$table => 'pivot'], 'pivot.' . $this->foreignKey . '=' . $this->query->getTable() . '.' . $this->query->getPk())
+//                ->where('pivot.' . $this->localKey, $this->parent->$pk);
+//            $this->baseQuery = true;
+//        }
     }
 
 }

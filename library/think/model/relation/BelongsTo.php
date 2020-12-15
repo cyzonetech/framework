@@ -112,7 +112,7 @@ class BelongsTo extends OneToOne
             return 0;
         }
 
-        if ($closure) {
+        if ($closure instanceof Closure) {
             $return = $closure($this->query);
 
             if ($return && is_string($return)) {

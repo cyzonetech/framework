@@ -1535,7 +1535,8 @@ class Query
         $logic = strtoupper($logic);
 
         if ($field instanceof Where) {
-            $field = $field->parse();
+            $this->_options['where'][$logic] = $field->parse();
+            return $this;
         }
 
         if (is_string($field) && !empty($this->_options['via']) && false === strpos($field, '.')) {
@@ -3459,7 +3460,7 @@ class Query
     }
 
     /**
-     * 查找单条记录 如果不存在则抛出异常
+     * 查找单条记录 不存在则返回空模型
      * @access public
      * @param  array|string|Query|\Closure $data
      * @return array|\PDOStatement|string|Model
@@ -3637,16 +3638,16 @@ class Query
             $key = isset($alias) ? $alias . '.' . $pk : $pk;
             // 根据主键查询
             if (is_array($data)) {
-                $where[] = isset($data[$pk]) ? [$key, '=', $data[$pk]] : [$key, 'in', $data];
+                $where[$pk] = isset($data[$pk]) ? [$key, '=', $data[$pk]] : [$key, 'in', $data];
             } else {
-                $where[] = strpos($data, ',') ? [$key, 'IN', $data] : [$key, '=', $data];
+                $where[$pk] = strpos($data, ',') ? [$key, 'IN', $data] : [$key, '=', $data];
             }
         } elseif (is_array($pk) && is_array($data) && !empty($data)) {
             // 根据复合主键查询
             foreach ($pk as $key) {
                 if (isset($data[$key])) {
                     $attr    = isset($alias) ? $alias . '.' . $key : $key;
-                    $where[] = [$attr, '=', $data[$key]];
+                    $where[$key] = [$attr, '=', $data[$key]];
                 } else {
                     throw new Exception('miss complex primary data');
                 }

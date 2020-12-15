@@ -12,7 +12,6 @@
 namespace think\model\relation;
 
 use Closure;
-use think\App;
 use think\db\Query;
 use think\Loader;
 use think\Model;
@@ -145,7 +144,7 @@ class HasManyThrough extends Relation
      * @access protected
      * @param  array   $resultSet   数据集
      * @param  string  $relation    当前关联名
-     * @param  string   $subRelation 子关联名
+     * @param  mixed   $subRelation 子关联名
      * @param  Closure $closure     闭包
      * @return void
      */
@@ -194,7 +193,7 @@ class HasManyThrough extends Relation
      * @access protected
      * @param  Model   $result      数据对象
      * @param  string  $relation    当前关联名
-     * @param  string   $subRelation 子关联名
+     * @param  mixed   $subRelation 子关联名
      * @param  Closure $closure     闭包
      * @return void
      */
@@ -228,7 +227,7 @@ class HasManyThrough extends Relation
      * @param  array   $where       关联预查询条件
      * @param  string  $key         关联键名
      * @param  string  $relation    关联名
-     * @param  string   $subRelation 子关联
+     * @param  mixed   $subRelation 子关联
      * @param  Closure $closure
      * @return array
      */

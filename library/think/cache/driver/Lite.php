@@ -49,7 +49,7 @@ class Lite extends Driver
      * @param  string $name 缓存变量名
      * @return string
      */
-    protected function getCacheKey($name)
+    public function getCacheKey($name)
     {
         return $this->options['path'] . $this->options['prefix'] . md5($name) . '.php';
     }

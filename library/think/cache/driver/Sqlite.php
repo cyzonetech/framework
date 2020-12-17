@@ -55,7 +55,7 @@ class Sqlite extends Driver
      * @param  string $name 缓存名
      * @return string
      */
-    protected function getCacheKey($name)
+    public function getCacheKey($name)
     {
         return $this->options['prefix'] . sqlite_escape_string($name);
     }

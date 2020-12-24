@@ -445,6 +445,39 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
             }
         });
     }
+    
+    /**
+     * 指定字段及排序
+     * @param string $args 如：created_at asc,weight desc
+     * @return $this|array
+     */
+    public function orderBy(string $args)
+    {
+        $array = [];
+        $rule = [];
+
+        $orders = explode(',', $args);
+        $args = [];
+        foreach ($orders as $order) {
+            $order = preg_replace('/\s+/', ' ', trim($order));
+            list($field, $sort) = explode(' ', $order);
+            $args[$field] = strtolower($sort) == 'asc' ? SORT_ASC : SORT_DESC;
+        }
+
+        $items = $this->items;
+        foreach ($args as $field => $sort) {
+            foreach ($items as $offset => $row) {
+                $array[$field][$offset] = $row[$field];
+            }
+            $rule[] = "\$array['{$field}'], {$sort}";
+        }
+        if (empty($array) || empty($rule)) {
+            return $items;
+        }
+        eval('array_multisort(' . implode(', ', $rule) . ', $items);');
+
+        return new static($items);
+    }
 
     /**
      * 将数组打乱

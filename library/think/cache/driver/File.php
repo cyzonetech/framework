@@ -76,7 +76,7 @@ class File extends Driver
      * @param  bool   $auto 是否自动创建目录
      * @return string
      */
-    protected function getCacheKey($name, $auto = false)
+    public function getCacheKey($name, $auto = false)
     {
         $name = hash($this->options['hash_type'], $name);
 

@@ -1,5 +1,5 @@
 {
-    "name": "topthink/framework",
+    "name": "cyzonetech/framework",
     "description": "The ThinkPHP Framework.",
     "keywords": [
         "framework",
@@ -27,7 +27,7 @@
         "psr/log": "~1.0",
         "psr/container": "~1.0",
         "psr/simple-cache": "^1.0",
-        "topthink/think-orm": "^2.0",
+        "cyzonetech/think-orm": "^2.0",
         "topthink/think-helper": "^3.1.1"
     },
     "require-dev": {
